@@ -171,75 +171,67 @@
             updateImagePreviews();
         });
 
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-            if (selectedFiles.length === 0) {
-                alert('Prosím vyberte alespoň jednu fotografii.');
-                return;
-            }
+    if (selectedFiles.length === 0) {
+        alert('Prosím vyberte alespoň jednu fotografii.');
+        return;
+    }
 
-            submitBtn.disabled = true;
-            loading.classList.remove('hidden');
+    submitBtn.disabled = true;
+    loading.classList.remove('hidden');
 
-            try {
-                const imgbbApiKey = '6666e328c2fa058fc649a6609edc0fd7';
-                const imgbbUrl = 'https://api.imgbb.com/1/upload';
-                const imageUrls = [];
+    try {
+        const imgbbApiKey = '6666e328c2fa058fc649a6609edc0fd7';
+        const imgbbUrl = 'https://api.imgbb.com/1/upload';
+        const imageUrls = [];
 
-                for (const file of selectedFiles) {
-                    const uploadData = new FormData();
-                    uploadData.append('image', file);
-                    uploadData.append('key', imgbbApiKey);
+        for (const file of selectedFiles) {
+            const uploadData = new FormData();
+            uploadData.append('image', file);
+            uploadData.append('key', imgbbApiKey);
 
-                    const response = await fetch(imgbbUrl, {
-                        method: 'POST',
-                        body: uploadData
-                    });
+            const response = await fetch(imgbbUrl, {
+                method: 'POST',
+                body: uploadData
+            });
 
-                    if (!response.ok) throw new Error('Chyba při nahrávání fotografie');
+            if (!response.ok) throw new Error('Chyba při nahrávání fotografie');
 
-                    const result = await response.json();
-                    // Získání URL nahraného obrázku
-                    imageUrls.push(result.data.image.url); // URL obrázku v plném rozlišení
-                }
+            const result = await response.json();
+            imageUrls.push(result.data.image.url); // URL obrázku v plném rozlišení
+        }
 
-                const formData = new FormData(form);
-                const params = {
-                    name: formData.get('name') || '',
-                    email: formData.get('email') || '',
-                    item: formData.get('item') || '',
-                    description: formData.get('description') || '',
-                    image_url1: imageUrls[0] || '',
-                    image_url2: imageUrls[1] || '', 
-                    image_url3: imageUrls[2] || '', 
-                    image_url4: imageUrls[3] || '', 
-                    image_url5: imageUrls[4] || ''
-                };
+        const formData = new FormData(form);
+        const params = {
+            name: formData.get('name') || '',  // Zajišťuje, že žádná hodnota není prázdná
+            email: formData.get('email') || '',
+            item: formData.get('item') || '',
+            description: formData.get('description') || '',
+            image_url1: imageUrls[0] || '',  // Nastaví prázdný řetězec, pokud URL neexistuje
+            image_url2: imageUrls[1] || '',
+            image_url3: imageUrls[2] || '',
+            image_url4: imageUrls[3] || '',
+            image_url5: imageUrls[4] || ''
+        };
 
-                // Zajistěte, že žádná proměnná není prázdná nebo neplatná
-                for (const key in params) {
-                    if (params[key] === undefined || params[key] === null) {
-                        params[key] = '';  // Nastavení prázdného stringu pro neplatné hodnoty
-                    }
-                }
+        // Odeslání emailu přes EmailJS
+        await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
 
-                // Odeslání dat přes EmailJS
-                await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
-
-                alert('Formulář byl úspěšně odeslán! Budeme vás kontaktovat co nejdříve.');
-                form.reset();
-                selectedFiles = [];
-                updateImagePreviews();
-                showHome();
-            } catch (error) {
-                alert('Nastala chyba při odesílání formuláře: ' + error.message);
-                console.error(error);
-            } finally {
-                submitBtn.disabled = false;
-                loading.classList.add('hidden');
-            }
-        });
+        alert('Formulář byl úspěšně odeslán! Budeme vás kontaktovat co nejdříve.');
+        form.reset();
+        selectedFiles = [];
+        updateImagePreviews();
+        showHome();
+    } catch (error) {
+        alert('Nastala chyba při odesílání formuláře: ' + error.message);
+        console.error(error);
+    } finally {
+        submitBtn.disabled = false;
+        loading.classList.add('hidden');
+    }
+});
     </script>
 </body>
 </html>
