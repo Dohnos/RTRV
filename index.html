@@ -90,6 +90,15 @@
 
                 <div id="imagePreviewContainer" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
 
+                <!-- Přidaný progress bar -->
+                <div id="uploadProgressContainer" class="hidden">
+                    <label class="block text-sm font-medium text-stone-700">Nahrávání fotografií</label>
+                    <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                        <div id="uploadProgressBar" class="bg-amber-600 h-4" style="width: 0%;"></div>
+                    </div>
+                    <div id="uploadProgressText" class="text-sm text-stone-700 mt-2 text-right">0%</div>
+                </div>
+
                 <button type="submit" id="submitBtn" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-full transition-all transform hover:scale-105">
                     Odeslat
                 </button>
@@ -122,6 +131,11 @@
         const imagesInput = document.getElementById('images');
         const fileError = document.getElementById('fileError');
         const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+
+        // Přidané elementy pro progress bar
+        const uploadProgressContainer = document.getElementById('uploadProgressContainer');
+        const uploadProgressBar = document.getElementById('uploadProgressBar');
+        const uploadProgressText = document.getElementById('uploadProgressText');
 
         const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
         const MAX_FILES = 5;
@@ -171,69 +185,101 @@
             updateImagePreviews();
         });
 
-form.addEventListener('submit', async function(e) {
-    e.preventDefault();
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-    if (selectedFiles.length === 0) {
-        alert('Prosím vyberte alespoň jednu fotografii.');
-        return;
-    }
+            if (selectedFiles.length === 0) {
+                alert('Prosím vyberte alespoň jednu fotografii.');
+                return;
+            }
 
-    submitBtn.disabled = true;
-    loading.classList.remove('hidden');
+            submitBtn.disabled = true;
+            loading.classList.remove('hidden');
 
-    try {
-        const imgbbApiKey = '6666e328c2fa058fc649a6609edc0fd7';
-        const imgbbUrl = 'https://api.imgbb.com/1/upload';
-        const imageUrls = [];
+            try {
+                const imgbbApiKey = '6666e328c2fa058fc649a6609edc0fd7';
+                const imgbbUrl = 'https://api.imgbb.com/1/upload';
+                const imageUrls = [];
 
-        // Pro všechny vybrané soubory nahraj na ImgBB
-        for (const file of selectedFiles) {
-            const uploadData = new FormData();
-            uploadData.append('image', file);
-            uploadData.append('key', imgbbApiKey);
+                const totalBytes = selectedFiles.reduce((acc, file) => acc + file.size, 0);
+                let previousUploadedBytes = 0;
 
-            const response = await fetch(imgbbUrl, {
-                method: 'POST',
-                body: uploadData
-            });
+                // Zobrazíme progress bar
+                uploadProgressContainer.classList.remove('hidden');
+                uploadProgressBar.style.width = '0%';
+                uploadProgressText.textContent = '0%';
 
-            if (!response.ok) throw new Error('Chyba při nahrávání fotografie');
+                for (const file of selectedFiles) {
+                    const uploadData = new FormData();
+                    uploadData.append('image', file);
+                    uploadData.append('key', imgbbApiKey);
 
-            const result = await response.json();
-            imageUrls.push(result.data.image.url); // URL obrázku z ImgBB
-        }
+                    await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
 
-        // Vytvoř params s prázdnými odkazy tam, kde chybí obrázky
-        const formData = new FormData(form);
-        const params = {
-            name: formData.get('name') || 'Nezadáno',
-            email: formData.get('email') || 'Nezadáno',
-            item: formData.get('item') || 'Nezadáno',
-            description: formData.get('description') || 'Nezadáno',
-            image_url1: imageUrls[0] || 'Žádný obrázek',  // Pošleme text "Žádný obrázek" pokud URL chybí
-            image_url2: imageUrls[1] || 'Žádný obrázek',
-            image_url3: imageUrls[2] || 'Žádný obrázek',
-            image_url4: imageUrls[3] || 'Žádný obrázek',
-            image_url5: imageUrls[4] || 'Žádný obrázek'
-        };
+                        xhr.open('POST', imgbbUrl);
 
-        // Odeslání emailu přes EmailJS
-        await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
+                        xhr.upload.addEventListener('progress', (e) => {
+                            if (e.lengthComputable) {
+                                let uploadedBytes = previousUploadedBytes + e.loaded;
+                                const progressPercent = Math.round((uploadedBytes / totalBytes) * 100);
+                                uploadProgressBar.style.width = progressPercent + '%';
+                                uploadProgressText.textContent = progressPercent + '%';
+                            }
+                        });
 
-        alert('Formulář byl úspěšně odeslán! Budeme vás kontaktovat co nejdříve.');
-        form.reset();
-        selectedFiles = [];
-        updateImagePreviews();
-        showHome();
-    } catch (error) {
-        alert('Nastala chyba při odesílání formuláře: ' + error.message);
-        console.error(error);
-    } finally {
-        submitBtn.disabled = false;
-        loading.classList.add('hidden');
-    }
-});
+                        xhr.onload = () => {
+                            if (xhr.status === 200) {
+                                const result = JSON.parse(xhr.responseText);
+                                imageUrls.push(result.data.image.url);
+                                previousUploadedBytes += file.size;
+                                resolve();
+                            } else {
+                                reject(new Error('Chyba při nahrávání fotografie'));
+                            }
+                        };
+
+                        xhr.onerror = () => {
+                            reject(new Error('Chyba při nahrávání fotografie'));
+                        };
+
+                        xhr.send(uploadData);
+                    });
+                }
+
+                // Skryjeme progress bar po dokončení
+                uploadProgressContainer.classList.add('hidden');
+
+                // Vytvoř params s prázdnými odkazy tam, kde chybí obrázky
+                const formData = new FormData(form);
+                const params = {
+                    name: formData.get('name') || 'Nezadáno',
+                    email: formData.get('email') || 'Nezadáno',
+                    item: formData.get('item') || 'Nezadáno',
+                    description: formData.get('description') || 'Nezadáno',
+                    image_url1: imageUrls[0] || 'Žádný obrázek',
+                    image_url2: imageUrls[1] || 'Žádný obrázek',
+                    image_url3: imageUrls[2] || 'Žádný obrázek',
+                    image_url4: imageUrls[3] || 'Žádný obrázek',
+                    image_url5: imageUrls[4] || 'Žádný obrázek'
+                };
+
+                // Odeslání emailu přes EmailJS
+                await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
+
+                alert('Formulář byl úspěšně odeslán! Budeme vás kontaktovat co nejdříve.');
+                form.reset();
+                selectedFiles = [];
+                updateImagePreviews();
+                showHome();
+            } catch (error) {
+                alert('Nastala chyba při odesílání formuláře: ' + error.message);
+                console.error(error);
+            } finally {
+                submitBtn.disabled = false;
+                loading.classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
