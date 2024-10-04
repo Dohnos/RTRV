@@ -187,6 +187,7 @@ form.addEventListener('submit', async function(e) {
         const imgbbUrl = 'https://api.imgbb.com/1/upload';
         const imageUrls = [];
 
+        // Pro všechny vybrané soubory nahraj na ImgBB
         for (const file of selectedFiles) {
             const uploadData = new FormData();
             uploadData.append('image', file);
@@ -200,20 +201,21 @@ form.addEventListener('submit', async function(e) {
             if (!response.ok) throw new Error('Chyba při nahrávání fotografie');
 
             const result = await response.json();
-            imageUrls.push(result.data.image.url); // URL obrázku v plném rozlišení
+            imageUrls.push(result.data.image.url); // URL obrázku z ImgBB
         }
 
+        // Vytvoř params s prázdnými odkazy tam, kde chybí obrázky
         const formData = new FormData(form);
         const params = {
-            name: formData.get('name') || 'none',
-            email: formData.get('email') || 'none',
-            item: formData.get('item') || 'none',
-            description: formData.get('description') || 'none',
-            image_url1: imageUrls[0] || 'none',
-            image_url2: imageUrls[1] || 'none',
-            image_url3: imageUrls[2] || 'none',
-            image_url4: imageUrls[3] || 'none',
-            image_url5: imageUrls[4] || 'none'
+            name: formData.get('name') || 'Nezadáno',
+            email: formData.get('email') || 'Nezadáno',
+            item: formData.get('item') || 'Nezadáno',
+            description: formData.get('description') || 'Nezadáno',
+            image_url1: imageUrls[0] || 'Žádný obrázek',  // Pošleme text "Žádný obrázek" pokud URL chybí
+            image_url2: imageUrls[1] || 'Žádný obrázek',
+            image_url3: imageUrls[2] || 'Žádný obrázek',
+            image_url4: imageUrls[3] || 'Žádný obrázek',
+            image_url5: imageUrls[4] || 'Žádný obrázek'
         };
 
         // Odeslání emailu přes EmailJS
