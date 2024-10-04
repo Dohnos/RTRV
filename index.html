@@ -205,18 +205,20 @@ form.addEventListener('submit', async function(e) {
 
         const formData = new FormData(form);
         const params = {
-            name: formData.get('name') || '',  // Zajišťuje, že žádná hodnota není prázdná
-            email: formData.get('email') || '',
-            item: formData.get('item') || '',
-            description: formData.get('description') || '',
-            image_url1: imageUrls[0] || '',  // Nastaví prázdný řetězec, pokud URL neexistuje
-            image_url2: imageUrls[1] || '',
-            image_url3: imageUrls[2] || '',
-            image_url4: imageUrls[3] || '',
-            image_url5: imageUrls[4] || ''
+            name: formData.get('name'),
+            email: formData.get('email'),
+            item: formData.get('item'),
+            description: formData.get('description')
         };
 
-        // Odeslání emailu přes EmailJS
+        // Přidejte pouze ne-prázdné URL obrázků
+        imageUrls.forEach((url, index) => {
+            if (url) {
+                params[`image_url${index + 1}`] = url;
+            }
+        });
+
+        // Odeslání emailu přes EmailJS pouze s platnými proměnnými
         await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
 
         alert('Formulář byl úspěšně odeslán! Budeme vás kontaktovat co nejdříve.');
