@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Starožitnictví - Prodej svých cenností</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
         
@@ -212,7 +212,7 @@
                     image_urls: imageUrls
                 };
 
-                await emailjs.send("service_yx70mqc", "template_7bb0vf6", params);
+                await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
                 alert('Formulář byl úspěšně odeslán! Budeme vás kontaktovat co nejdříve.');
                 form.reset();
                 selectedFiles = [];
