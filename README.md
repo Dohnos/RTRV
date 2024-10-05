@@ -31,7 +31,7 @@ ANTRH je moderní a uživatelsky přívětivá platforma určená pro rychlý a 
 
 ## 📄 Licence
 
-Tento projekt je licencován.
+Tento projekt je licencován. Nelze ho používat pro další projekty.
 
 ## 📞 Kontakt
 
