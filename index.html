@@ -3,9 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retromat - Prodej svých cenností</title>
+    <title>VykupAntik - Prodej svých cenností</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="VykupAntik je vaše spolehlivé místo pro rychlý a férový prodej starožitností a cenností. Nabízíme profesionální ocenění a diskrétní služby.">
+    <meta name="keywords" content="vykup starožitností, prodej cenností, starožitnictví, férové ocenění, rychlý prodej, diskrétní služby, prodej šperků, prodej umění">
+    <meta name="author" content="VykupAntik">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="VykupAntik - Prodej svých cenností">
+    <meta property="og:description" content="VykupAntik je vaše spolehlivé místo pro rychlý a férový prodej starožitností a cenností. Nabízíme profesionální ocenění a diskrétní služby.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.vykupantik.cz">
+    <meta property="og:image" content="https://www.vykupantik.cz/images/og-image.jpg">
+    <meta property="og:locale" content="cs_CZ">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="VykupAntik - Prodej svých cenností">
+    <meta name="twitter:description" content="VykupAntik je vaše spolehlivé místo pro rychlý a férový prodej starožitností a cenností. Nabízíme profesionální ocenění a diskrétní služby.">
+    <meta name="twitter:image" content="https://www.vykupantik.cz/images/twitter-image.jpg">
+    <meta name="twitter:site" content="@VykupAntik">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
         
@@ -21,11 +49,11 @@
         }
     </style>
 </head>
-<body class="bg-stone-100 min-h-screen">
+<body class="bg-stone-100 min-h-screen flex flex-col justify-between">
     <!-- Úvodní stránka -->
-    <div id="homePage" class="container mx-auto px-4 py-8">
+    <div id="homePage" class="container mx-auto px-4 py-8 flex-grow">
         <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl md:text-6xl font-playfair text-center mb-6 text-stone-800">Retromat 🕰️</h1>
+            <h1 class="text-4xl md:text-6xl font-playfair text-center mb-6 text-stone-800">VykupAntik 🕰️</h1>
             <div class="relative rounded-2xl overflow-hidden shadow-xl mb-8">
                 <!-- Zde bude vaše fotka. Prozatím používám placeholder -->
                 <img src="https://i.postimg.cc/9XbKL9sk/A.webp" alt="Starožitnictví" class="w-full h-[400px] md:h-[500px] object-cover">
@@ -38,7 +66,7 @@
                     </div>
                 </div>
             </div>
-            <p class="text-lg md:text-xl text-center mb-8 text-stone-600">Retromat je místo, kde můžete snadno a rychle prodat své starožitnosti a cennosti. Naši odborníci vám nabídnou férové ceny a profesionální přístup. Připojte se k naší komunitě spokojených zákazníků ještě dnes!</p>
+            <p class="text-lg md:text-xl text-center mb-8 text-stone-600">VykupAntik je místo, kde můžete snadno a rychle prodat své starožitnosti a cennosti. Naši odborníci vám nabídnou férové ceny a profesionální přístup. Připojte se k naší komunitě spokojených zákazníků ještě dnes!</p>
             <div class="grid md:grid-cols-3 gap-8 text-center">
                 <div class="bg-white p-6 rounded-xl shadow-md">
                     <h3 class="font-playfair text-xl mb-3 text-stone-800">💰 Férové ocenění</h3>
@@ -57,7 +85,7 @@
     </div>
 
     <!-- Formulář -->
-    <div id="formPage" class="container mx-auto px-4 py-8 hidden">
+    <div id="formPage" class="container mx-auto px-4 py-8 hidden flex-grow">
         <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
             <button onclick="showHome()" class="mb-6 text-amber-600 hover:text-amber-700 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -71,28 +99,58 @@
             <form id="antiqueForm" class="space-y-6">
                 <div>
                     <label for="name" class="block text-sm font-medium text-stone-700">Jméno</label>
-                    <input type="text" id="name" name="name" required class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                    <input type="text" id="name" name="name" placeholder="Jan Novák" required class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                 </div>
 
                 <div>
                     <label for="email" class="block text-sm font-medium text-stone-700">E-mail</label>
-                    <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                    <div class="flex">
+                        <input type="text" id="emailUser" name="emailUser" placeholder="FrantaVomacka" required class="mt-1 block w-2/3 rounded-l-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                        <select id="emailDomain" name="emailDomain" required class="mt-1 block w-1/3 rounded-r-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                            <option value="@seznam.cz">@seznam.cz</option>
+                            <option value="@gmail.com">@gmail.com</option>
+                            <option value="@email.cz">@email.cz</option>
+                            <option value="other">Jiná</option>
+                        </select>
+                    </div>
+                    <input type="text" id="emailCustom" name="emailCustom" placeholder="vlastní doména" class="mt-2 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 hidden">
                 </div>
 
                 <div>
                     <label for="phone" class="block text-sm font-medium text-stone-700">Telefon</label>
-                    <input type="tel" id="phone" name="phone" required class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                    <input type="tel" id="phone" name="phone" placeholder="606 606 606" required class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                 </div>
 
                 <div>
                     <label for="location" class="block text-sm font-medium text-stone-700">Lokalita</label>
-                    <input type="text" id="location" name="location" required autocomplete="off" class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                    <input type="text" id="location" name="location" placeholder="Praha" required autocomplete="off" class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                     <ul id="suggestions" class="border border-gray-300 bg-white w-full mt-1 max-h-48 overflow-y-auto hidden"></ul>
                 </div>
 
                 <div>
                     <label for="message" class="block text-sm font-medium text-stone-700">Zpráva</label>
-                    <textarea id="message" name="message" rows="4" required class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"></textarea>
+                    <textarea id="message" name="message" rows="4" placeholder="Zpráva pro nás..." required class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"></textarea>
+                </div>
+
+                <!-- Nové Pole: Požadovaná cena -->
+                <div>
+                    <label class="block text-sm font-medium text-stone-700">Požadovaná cena</label>
+                    <div class="mt-2 space-y-2">
+                        <div class="flex items-center">
+                            <input type="radio" id="fixedPrice" name="desiredPriceOption" value="fixed" class="h-4 w-4 text-amber-600 border-stone-300 focus:ring-amber-500" required>
+                            <label for="fixedPrice" class="ml-2 block text-sm text-stone-700">Pevná cena s částkou</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="makeOffer" name="desiredPriceOption" value="offer" class="h-4 w-4 text-amber-600 border-stone-300 focus:ring-amber-500" required>
+                            <label for="makeOffer" class="ml-2 block text-sm text-stone-700">Nabídněte</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kontejner pro pevnou cenu, zpočátku skrytý -->
+                <div id="fixedPriceContainer" class="hidden">
+                    <label for="fixedPriceAmount" class="block text-sm font-medium text-stone-700">Vaše požadovaná cena (CZK)</label>
+                    <input type="number" id="fixedPriceAmount" name="fixedPriceAmount" placeholder="Např. 1000" min="0" class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                 </div>
 
                 <div>
@@ -120,6 +178,53 @@
             </form>
         </div>
     </div>
+
+    <!-- FAQ Sekce -->
+    <div id="faqSection" class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl font-playfair text-center mb-6 text-stone-800">Často kladené otázky ❓</h2>
+            <div class="space-y-4">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <button class="w-full text-left focus:outline-none faq-question">
+                        <h3 class="font-playfair text-xl mb-3 text-stone-800">Jak dlouho trvá proces ocenění?</h3>
+                    </button>
+                    <div class="faq-answer text-stone-600 hidden">
+                        Proces ocenění obvykle trvá do 24 hodin od odeslání formuláře. Naši odborníci vám poskytnou férovou nabídku co nejdříve.
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <button class="w-full text-left focus:outline-none faq-question">
+                        <h3 class="font-playfair text-xl mb-3 text-stone-800">Jaké druhy starožitností přijímáte?</h3>
+                    </button>
+                    <div class="faq-answer text-stone-600 hidden">
+                        Přijímáme širokou škálu starožitností včetně šperků, nábytku, uměleckých děl a dalších cenností. Pro více informací nás kontaktujte.
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <button class="w-full text-left focus:outline-none faq-question">
+                        <h3 class="font-playfair text-xl mb-3 text-stone-800">Jak probíhá platba?</h3>
+                    </button>
+                    <div class="faq-answer text-stone-600 hidden">
+                        Platba probíhá převodem na váš bankovní účet po schválení nabídky. Můžete také využít hotovostní platbu na naší pobočce.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer s rozbalovacím obsahem -->
+    <footer class="bg-stone-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <button class="w-full text-left focus:outline-none footer-toggle">
+                    <h3 class="font-playfair text-xl mb-3">O projektu</h3>
+                </button>
+                <div class="footer-content hidden text-stone-300">
+                    <p>VykupAntik je projekt vytvořený týmem nadšených profesionálů s cílem poskytovat férové a rychlé služby při prodeji starožitností. Naše zkušenosti a vášeň pro starožitnosti nám umožňují nabízet nejlepší ceny a zajišťovat diskrétní a profesionální přístup ke každému klientovi.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
         function showForm() {
@@ -293,14 +398,23 @@
                     updateProgress(progressPercentage);
                 }
 
-                // Vytvoř params s prázdnými odkazy tam, kde chybí obrázky
+                // Získání dat z formuláře
                 const formData = new FormData(form);
+                const emailUser = formData.get('emailUser') || 'Nezadáno';
+                let emailDomain = formData.get('emailDomain') || '@seznam.cz';
+                if (emailDomain === 'other') {
+                    emailDomain = formData.get('emailCustom') || 'Nezadáno';
+                }
+                const desiredPriceOption = formData.get('desiredPriceOption') || 'Nezadáno';
+                const fixedPriceAmount = formData.get('fixedPriceAmount') || 'Nezadáno';
                 const params = {
                     name: formData.get('name') || 'Nezadáno',
-                    email: formData.get('email') || 'Nezadáno',
+                    email: `${emailUser}${emailDomain}`,
                     phone: formData.get('phone') || 'Nezadáno',
                     location: formData.get('location') || 'Nezadáno',
                     message: formData.get('message') || 'Nezadáno',
+                    desiredPriceOption: desiredPriceOption,
+                    fixedPriceAmount: fixedPriceAmount
                 };
 
                 // Přidej až 10 URL obrázků
@@ -312,13 +426,15 @@
                 await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
 
                 currentStep++;
-                const progressPercentage = Math.round((currentStep / totalSteps) * 100);
-                updateProgress(progressPercentage);
+                const progressPercentageFinal = Math.round((currentStep / totalSteps) * 100);
+                updateProgress(progressPercentageFinal);
 
                 alert('Formulář byl úspěšně odeslán! Budeme vás kontaktovat co nejdříve.');
                 form.reset();
                 selectedFiles = [];
                 updateImagePreviews();
+                fixedPriceContainer.classList.add('hidden');
+                document.getElementById('fixedPriceAmount').removeAttribute('required');
                 showHome();
             } catch (error) {
                 alert('Nastala chyba při odesílání formuláře: ' + error.message);
@@ -379,6 +495,73 @@
         document.addEventListener('click', function(event) {
             if (!locationInput.contains(event.target) && !suggestionsList.contains(event.target)) {
                 suggestionsList.classList.add('hidden');
+            }
+        });
+
+        // Zobrazení pole pro vlastní doménu e-mailu
+        const emailDomainSelect = document.getElementById('emailDomain');
+        const emailCustomInput = document.getElementById('emailCustom');
+
+        emailDomainSelect.addEventListener('change', function() {
+            if (this.value === 'other') {
+                emailCustomInput.classList.remove('hidden');
+                emailCustomInput.setAttribute('required', 'required');
+            } else {
+                emailCustomInput.classList.add('hidden');
+                emailCustomInput.removeAttribute('required');
+                emailCustomInput.value = '';
+            }
+        });
+
+        // Formátování telefonního čísla
+        const phoneInput = document.getElementById('phone');
+
+        phoneInput.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, ''); // Odstranění všech nečíselných znaků
+            if (value.length > 9) value = value.slice(0, 9); // Omezení na 9 číslic
+            const formattedValue = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+            this.value = formattedValue;
+        });
+
+        // Dynamické zobrazování pole pro pevnou cenu
+        const desiredPriceOptions = document.getElementsByName('desiredPriceOption');
+        const fixedPriceContainer = document.getElementById('fixedPriceContainer');
+
+        desiredPriceOptions.forEach(option => {
+            option.addEventListener('change', function() {
+                if (this.value === 'fixed') {
+                    fixedPriceContainer.classList.remove('hidden');
+                    document.getElementById('fixedPriceAmount').setAttribute('required', 'required');
+                } else {
+                    fixedPriceContainer.classList.add('hidden');
+                    document.getElementById('fixedPriceAmount').removeAttribute('required');
+                    document.getElementById('fixedPriceAmount').value = '';
+                }
+            });
+        });
+
+        // FAQ - Rozbalování odpovědí
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        faqQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+                const answer = this.nextElementSibling;
+                if (answer.classList.contains('hidden')) {
+                    answer.classList.remove('hidden');
+                } else {
+                    answer.classList.add('hidden');
+                }
+            });
+        });
+
+        // Footer - Rozbalování obsahu
+        const footerToggle = document.querySelector('.footer-toggle');
+        const footerContent = document.querySelector('.footer-content');
+
+        footerToggle.addEventListener('click', function() {
+            if (footerContent.classList.contains('hidden')) {
+                footerContent.classList.remove('hidden');
+            } else {
+                footerContent.classList.add('hidden');
             }
         });
     </script>
