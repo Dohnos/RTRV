@@ -1,8 +1,6 @@
-# AntikTrh - Prodej starožitností snadno 🕰️
+# ANTRH - Prodej starožitností snadno 🕰️
 
-![AntikTrh Logo](https://i.postimg.cc/bYStrkkt/clock.png)
-
-AntikTrh je moderní a uživatelsky přívětivá platforma určená pro rychlý a férový prodej starožitností a cenností. Naše webová aplikace nabízí profesionální ocenění, diskrétní služby a jednoduchý proces prodeje, který splní očekávání jak prodávajících, tak kupujících.
+ANTRH je moderní a uživatelsky přívětivá platforma určená pro rychlý a férový prodej starožitností a cenností. Naše webová aplikace nabízí profesionální ocenění, diskrétní služby a jednoduchý proces prodeje, který splní očekávání jak prodávajících, tak kupujících.
 
 ## 🚀 Klíčové Funkce
 
@@ -30,10 +28,6 @@ AntikTrh je moderní a uživatelsky přívětivá platforma určená pro rychlý
 - **EmailJS**: Odesílání formulářů přímo z klientské strany bez potřeby vlastního backendu.
 - **ImgBB API**: Nahrávání a hostování obrázků.
 - **OpenStreetMap Nominatim API**: Našeptávač pro lokalitu při vyplňování formuláře.
-
-## 📸 Obrázky a Náhledy
-
-![Úvodní Stránka](https://i.postimg.cc/9XbKL9sk/A.webp)
 
 ## 📄 Licence
 
