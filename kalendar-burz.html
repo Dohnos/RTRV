@@ -8,17 +8,6 @@
     <meta name="description" content="Kompletní kalendář bleších a starožitných trhů v České republice. Plánujte návštěvy trhů, přidávejte akce do svého kalendáře a objevte trhy ve vašem okolí díky snadným filtrům.">
     <meta name="keywords" content="bleší trhy, starožitné trhy, kalendář trhů, AntikTrh, starožitnosti, bleší burza, kde najít trhy, trhy v Česku, burza starožitností">
     <meta name="author" content="AntikTrh">
-    <meta property="og:title" content="Bleší a Starožitné Trhy - Kalendář | AntikTrh">
-    <meta property="og:description" content="Kalendář všech bleších a starožitných trhů v České republice. Plánujte svou návštěvu s pomocí naší interaktivní stránky.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://antiktrh.cz/kalendar-burz">
-    <meta property="og:image" content="https://i.postimg.cc/W4MM6mCd/Main.webp">
-    <meta property="og:locale" content="cs_CZ">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Bleší a Starožitné Trhy - Kalendář | AntikTrh">
-    <meta name="twitter:description" content="Kompletní kalendář bleších a starožitných trhů v Česku. Plánujte svou návštěvu snadno a rychle.">
-    <meta name="twitter:image" content="https://i.postimg.cc/W4MM6mCd/Main.webp">
-    <meta name="twitter:site" content="@AntikTrh">
     <link rel="stylesheet" href="https://cdn.tailwindcss.com">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -241,7 +230,11 @@
                         <p class="text-stone-600"><strong>Typ:</strong> ${event.popis}</p>
                         <button onclick="addToCalendar('${event.datum}', '${event.nazev}', '${event.misto}', '${event.popis}')" 
                                 class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-all transform hover:scale-105 mt-4">
-                            Přidat do kalendáře 🔔
+                            Zkopírovat Událost 🔔
+                        </button>
+                        <button onclick="openCalendar()" 
+                                class="bg-stone-600 hover:bg-stone-700 text-white font-bold py-2 px-4 rounded-full transition-all transform hover:scale-105 mt-4 ml-2">
+                            Otevřít Kalendář 📅
                         </button>
                     `;
                     calendarElement.appendChild(eventCard);
@@ -271,42 +264,27 @@
         });
 
         function addToCalendar(date, title, place, description) {
-            const event = {
-                title: title,
-                description: description,
-                location: place,
-                start: new Date(date).toISOString(),
-                end: new Date(new Date(date).getTime() + 2 * 60 * 60 * 1000).toISOString() // Předpokládejme 2 hodiny trvání
-            };
+            const eventDetails = `Datum: ${date}\nNázev: ${title}\nMísto: ${place}`;
+            
+            // Zkopírování dat do schránky
+            navigator.clipboard.writeText(eventDetails).then(() => {
+                alert('Detaily události byly zkopírovány do schránky.');
+            }).catch(err => {
+                console.error('Nepodařilo se zkopírovat do schránky: ', err);
+            });
+        }
 
-            // Vytvoření .ics souboru
-            const icsContent = `
-BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//AntikTrh//Bleší a Starožitné Trhy//CZ
-BEGIN:VEVENT
-UID:${new Date().getTime()}@antiktrh.cz
-DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
-DTSTART:${event.start.replace(/[-:]/g, '').split('.')[0]}Z
-DTEND:${event.end.replace(/[-:]/g, '').split('.')[0]}Z
-SUMMARY:${event.title}
-DESCRIPTION:${event.description}
-LOCATION:${event.location}
-END:VEVENT
-END:VCALENDAR
-            `.trim();
-
-            const blob = new Blob([icsContent], { type: 'text/calendar' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${title}.ics`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            alert('Událost byla přidána do vašeho kalendáře.');
+        function openCalendar() {
+            // Detekce platformy
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            
+            if (/android/i.test(userAgent)) {
+                window.location.href = 'content://com.android.calendar/time/'; // Android kalendář
+            } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                window.location.href = 'calshow://'; // iOS kalendář
+            } else {
+                alert('Kalendář nelze otevřít, platforma není podporována.');
+            }
         }
     </script>
 </body>
