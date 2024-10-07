@@ -21,7 +21,6 @@
     <meta name="twitter:site" content="@AntikTrh">
     <link rel="stylesheet" href="https://cdn.tailwindcss.com">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/heroicons@2.0.16/dist/heroicons.min.js"></script>
     <style>
         .font-playfair {
             font-family: 'Playfair Display', serif;
@@ -39,7 +38,7 @@
             border-radius: 0.75rem;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        #filter {
+        #filter, #filter-date, #filter-type {
             background-color: #f9fafb;
             font-size: 1rem;
         }
@@ -53,16 +52,6 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <select id="filter" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500">
                     <option value="">Všechny lokality</option>
-                    <option value="Plzeň">Plzeň</option>
-                    <option value="Praha">Praha</option>
-                    <option value="Ostrava">Ostrava</option>
-                    <option value="Buštěhrad">Buštěhrad</option>
-                    <option value="Most">Most</option>
-                    <option value="Olomouc">Olomouc</option>
-                    <option value="Brno">Brno</option>
-                    <option value="Hodonice">Hodonice</option>
-                    <option value="Chotusice">Chotusice</option>
-                    <!-- Další možnosti podle potřeby -->
                 </select>
                 <input type="date" id="filter-date" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500" placeholder="Filtrovat podle data">
                 <select id="filter-type" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500">
@@ -70,6 +59,8 @@
                     <option value="bleší trh">Bleší trhy</option>
                     <option value="starožitnosti">Starožitné trhy</option>
                     <option value="auto-moto">Auto-moto trhy</option>
+                    <option value="filatelie">Filatelie</option>
+                    <option value="military">Military</option>
                 </select>
             </div>
         </div>
@@ -89,42 +80,61 @@
     <script>
         document.addEventListener('DOMContentLoaded', async function () {
             let events = [];
+            const locations = new Set();
+            const types = new Set();
 
             try {
-                const fleaResponse = await fetch('blesaky.txt');
-                const antiqueResponse = await fetch('staro.txt');
-                const fleaText = await fleaResponse.text();
-                const antiqueText = await antiqueResponse.text();
-                events = [...fleaText.split('\n'), ...antiqueText.split('\n')];
+                const response = await fetch('burzy.txt');
+                const text = await response.text();
+                const lines = text.split('\n');
+                
+                // Skip the header row
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line) {
+                        const [datum, nazev, misto, popis] = line.split(',');
+                        events.push({ datum, nazev, misto, popis });
+                        locations.add(misto);
+                        
+                        // Add types from description
+                        popis.split(',').forEach(type => {
+                            types.add(type.trim());
+                        });
+                    }
+                }
             } catch (error) {
-                console.error('Error loading event files:', error);
+                console.error('Error loading event file:', error);
             }
             
-            const calendarElement = document.getElementById('calendar');
             const filterElement = document.getElementById('filter');
             const filterDateElement = document.getElementById('filter-date');
             const filterTypeElement = document.getElementById('filter-type');
+            const calendarElement = document.getElementById('calendar');
 
-            function renderEvents(filter = "", dateFilter = "", typeFilter = "") {
+            // Populate location filter
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                filterElement.appendChild(option);
+            });
+
+            function renderEvents(locationFilter = "", dateFilter = "", typeFilter = "") {
                 calendarElement.innerHTML = "";
                 events.forEach(event => {
-                    if (!event.trim() || event.toLowerCase().includes('název')) return;
-
-                    const parts = event.split('\t');
-                    if (parts.length < 3) return;  // Make sure there are enough parts to avoid undefined
-                    const [datum, nazev, misto, popis] = parts;
-
-                    if (filter && !misto.includes(filter)) return;
-                    if (dateFilter && datum !== dateFilter) return;
-                    if (typeFilter && !popis.toLowerCase().includes(typeFilter)) return;
+                    if (locationFilter && event.misto !== locationFilter) return;
+                    if (dateFilter && event.datum !== dateFilter) return;
+                    if (typeFilter && !event.popis.toLowerCase().includes(typeFilter.toLowerCase())) return;
 
                     const eventCard = document.createElement('div');
                     eventCard.className = "event-card bg-white p-6 rounded-xl shadow-md transition-transform";
                     eventCard.innerHTML = `
-                        <h3 class="font-playfair text-2xl text-stone-800">${nazev} 🌎</h3>
-                        <p class="text-stone-600">Místo: ${misto}</p>
-                        <p class="text-stone-600">Popis: ${popis || 'N/A'}</p>
-                        <button onclick="addToCalendar('${datum}', '${nazev}', '${misto}')" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-all transform hover:scale-105 mt-4">
+                        <h3 class="font-playfair text-2xl text-stone-800">${event.nazev} 🌎</h3>
+                        <p class="text-stone-600 mt-2"><strong>Datum:</strong> ${event.datum}</p>
+                        <p class="text-stone-600"><strong>Místo:</strong> ${event.misto}</p>
+                        <p class="text-stone-600"><strong>Typ:</strong> ${event.popis}</p>
+                        <button onclick="addToCalendar('${event.datum}', '${event.nazev}', '${event.misto}')" 
+                                class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-all transform hover:scale-105 mt-4">
                             Přidat do kalendáře 🔔
                         </button>
                     `;
@@ -132,15 +142,15 @@
                 });
             }
 
-            filterElement.addEventListener('change', function () {
+            filterElement.addEventListener('change', function() {
                 renderEvents(this.value, filterDateElement.value, filterTypeElement.value);
             });
 
-            filterDateElement.addEventListener('change', function () {
+            filterDateElement.addEventListener('change', function() {
                 renderEvents(filterElement.value, this.value, filterTypeElement.value);
             });
 
-            filterTypeElement.addEventListener('change', function () {
+            filterTypeElement.addEventListener('change', function() {
                 renderEvents(filterElement.value, filterDateElement.value, this.value);
             });
 
@@ -148,7 +158,6 @@
         });
 
         function addToCalendar(date, title, location) {
-            // Function to add event to the user's calendar
             const calEvent = {
                 title,
                 startDate: date,
