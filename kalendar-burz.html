@@ -42,18 +42,59 @@
             background-color: #f9fafb;
             font-size: 1rem;
         }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-stone-100 min-h-screen flex flex-col justify-between">
     <div class="container mx-auto px-4 py-8 flex-grow">
         <h1 class="text-4xl md:text-5xl font-playfair text-center mb-6 text-stone-800">Kalendář Bleších a Starožitných Trhů 🕰️</h1>
+        
+        <!-- Legenda -->
+        <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+            <h2 class="text-xl font-playfair mb-3">Legenda:</h2>
+            <div class="flex flex-wrap">
+                <div class="legend-item">
+                    <div class="legend-color bg-blue-500"></div>
+                    <span>Bleší trh</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color bg-amber-500"></div>
+                    <span>Starožitnosti</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color bg-red-500"></div>
+                    <span>Auto-moto</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color bg-green-500"></div>
+                    <span>Filatelie</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color bg-purple-500"></div>
+                    <span>Military</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtry -->
         <div class="filter-container mb-6">
-            <label for="filter" class="block text-stone-800 text-lg mb-2">Filtrovat podle:</label>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <label class="block text-stone-800 text-lg mb-2">Filtrovat podle:</label>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <select id="filter" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500">
                     <option value="">Všechny lokality</option>
                 </select>
-                <input type="date" id="filter-date" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500" placeholder="Filtrovat podle data">
+                <input type="date" id="filter-date" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500">
                 <select id="filter-type" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500">
                     <option value="">Všechny typy</option>
                     <option value="bleší trh">Bleší trhy</option>
@@ -62,12 +103,17 @@
                     <option value="filatelie">Filatelie</option>
                     <option value="military">Military</option>
                 </select>
+                <button id="reset-filters" class="bg-stone-600 hover:bg-stone-700 text-white font-bold py-2 px-4 rounded-md transition-all">
+                    Resetovat filtry
+                </button>
             </div>
         </div>
+        
         <div id="calendar" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- Event cards will be generated here -->
         </div>
     </div>
+    
     <footer class="bg-stone-800 text-white py-8">
         <div class="container mx-auto px-4">
             <div class="max-w-4xl mx-auto text-center">
@@ -95,11 +141,6 @@
                         const [datum, nazev, misto, popis] = line.split(',');
                         events.push({ datum, nazev, misto, popis });
                         locations.add(misto);
-                        
-                        // Add types from description
-                        popis.split(',').forEach(type => {
-                            types.add(type.trim());
-                        });
                     }
                 }
             } catch (error) {
@@ -109,31 +150,55 @@
             const filterElement = document.getElementById('filter');
             const filterDateElement = document.getElementById('filter-date');
             const filterTypeElement = document.getElementById('filter-type');
+            const resetFiltersButton = document.getElementById('reset-filters');
             const calendarElement = document.getElementById('calendar');
 
             // Populate location filter
-            locations.forEach(location => {
+            const sortedLocations = Array.from(locations).sort();
+            sortedLocations.forEach(location => {
                 const option = document.createElement('option');
                 option.value = location;
                 option.textContent = location;
                 filterElement.appendChild(option);
             });
 
+            function getEventTypeColor(description) {
+                if (description.toLowerCase().includes('bleší trh')) return 'bg-blue-500';
+                if (description.toLowerCase().includes('starožitnosti')) return 'bg-amber-500';
+                if (description.toLowerCase().includes('auto-moto')) return 'bg-red-500';
+                if (description.toLowerCase().includes('filatelie')) return 'bg-green-500';
+                if (description.toLowerCase().includes('military')) return 'bg-purple-500';
+                return 'bg-gray-500';
+            }
+
             function renderEvents(locationFilter = "", dateFilter = "", typeFilter = "") {
                 calendarElement.innerHTML = "";
-                events.forEach(event => {
-                    if (locationFilter && event.misto !== locationFilter) return;
-                    if (dateFilter && event.datum !== dateFilter) return;
-                    if (typeFilter && !event.popis.toLowerCase().includes(typeFilter.toLowerCase())) return;
+                let filteredEvents = events;
+                
+                if (locationFilter) {
+                    filteredEvents = filteredEvents.filter(event => event.misto === locationFilter);
+                }
+                if (dateFilter) {
+                    filteredEvents = filteredEvents.filter(event => event.datum === dateFilter);
+                }
+                if (typeFilter) {
+                    filteredEvents = filteredEvents.filter(event => 
+                        event.popis.toLowerCase().includes(typeFilter.toLowerCase()));
+                }
 
+                filteredEvents.forEach(event => {
                     const eventCard = document.createElement('div');
-                    eventCard.className = "event-card bg-white p-6 rounded-xl shadow-md transition-transform";
+                    const typeColor = getEventTypeColor(event.popis);
+                    eventCard.className = `event-card bg-white p-6 rounded-xl shadow-md transition-transform`;
                     eventCard.innerHTML = `
-                        <h3 class="font-playfair text-2xl text-stone-800">${event.nazev} 🌎</h3>
+                        <div class="flex items-center mb-3">
+                            <div class="w-4 h-4 ${typeColor} rounded-full mr-2"></div>
+                            <h3 class="font-playfair text-2xl text-stone-800">${event.nazev}</h3>
+                        </div>
                         <p class="text-stone-600 mt-2"><strong>Datum:</strong> ${event.datum}</p>
                         <p class="text-stone-600"><strong>Místo:</strong> ${event.misto}</p>
                         <p class="text-stone-600"><strong>Typ:</strong> ${event.popis}</p>
-                        <button onclick="addToCalendar('${event.datum}', '${event.nazev}', '${event.misto}')" 
+                        <button onclick="addToCalendar('${event.datum}', '${event.nazev}', '${event.misto}', '${event.popis}')" 
                                 class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-all transform hover:scale-105 mt-4">
                             Přidat do kalendáře 🔔
                         </button>
@@ -142,35 +207,49 @@
                 });
             }
 
-            filterElement.addEventListener('change', function() {
-                renderEvents(this.value, filterDateElement.value, filterTypeElement.value);
+            filterElement.addEventListener('change', updateFilters);
+            filterDateElement.addEventListener('change', updateFilters);
+            filterTypeElement.addEventListener('change', updateFilters);
+
+            resetFiltersButton.addEventListener('click', function() {
+                filterElement.value = '';
+                filterDateElement.value = '';
+                filterTypeElement.value = '';
+                renderEvents();
             });
 
-            filterDateElement.addEventListener('change', function() {
-                renderEvents(filterElement.value, this.value, filterTypeElement.value);
-            });
-
-            filterTypeElement.addEventListener('change', function() {
-                renderEvents(filterElement.value, filterDateElement.value, this.value);
-            });
+            function updateFilters() {
+                renderEvents(
+                    filterElement.value,
+                    filterDateElement.value,
+                    filterTypeElement.value
+                );
+            }
 
             renderEvents();
         });
 
-        function addToCalendar(date, title, location) {
-            const calEvent = {
-                title,
-                startDate: date,
-                endDate: date,
-                location,
-                notes: "Nezapomeňte na tento trh!"
-            };
-
-            if (window.AppleCal) {
-                window.AppleCal.addEvent(calEvent);
-            } else {
-                alert("Přidávání do kalendáře podporováno pouze na zařízeních iOS.");
+        function addToCalendar(date, title, location, description) {
+            const formattedDate = date.split('.').reverse().join('-');
+            
+            // Pro Android
+            if (/android/i.test(navigator.userAgent)) {
+                const androidIntent = `content://com.android.calendar/time/${new Date(formattedDate).getTime()}`;
+                window.location.href = androidIntent;
+                return;
             }
+            
+            // Pro iOS
+            const iosCalendarUrl = `webcal://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formattedDate}/${formattedDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+            
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                window.location.href = iosCalendarUrl;
+                return;
+            }
+            
+            // Pro ostatní zařízení - Google Calendar
+            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formattedDate}/${formattedDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+            window.open(googleCalendarUrl, '_blank');
         }
     </script>
 </body>
