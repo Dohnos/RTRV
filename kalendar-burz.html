@@ -87,14 +87,18 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const fleaMarkets = `
-                ${`file-EYrccYgVsf6tQqKygbx2AJpE`} // Contents from blesaky.txt
-            `;
-            const antiqueMarkets = `
-                ${`file-Yjtv6qO8RsW3x9MNFmiJhPcm`} // Contents from staro.txt
-            `;
-            const events = [...fleaMarkets.split('\n'), ...antiqueMarkets.split('\n')];
+        document.addEventListener('DOMContentLoaded', async function () {
+            let events = [];
+
+            try {
+                const fleaResponse = await fetch('blesaky.txt');
+                const antiqueResponse = await fetch('staro.txt');
+                const fleaText = await fleaResponse.text();
+                const antiqueText = await antiqueResponse.text();
+                events = [...fleaText.split('\n'), ...antiqueText.split('\n')];
+            } catch (error) {
+                console.error('Error loading event files:', error);
+            }
             
             const calendarElement = document.getElementById('calendar');
             const filterElement = document.getElementById('filter');
@@ -104,9 +108,12 @@
             function renderEvents(filter = "", dateFilter = "", typeFilter = "") {
                 calendarElement.innerHTML = "";
                 events.forEach(event => {
-                    if (!event.trim()) return;
+                    if (!event.trim() || event.toLowerCase().includes('název')) return;
 
-                    const [datum, nazev, misto, popis] = event.split('\t');
+                    const parts = event.split('\t');
+                    if (parts.length < 3) return;  // Make sure there are enough parts to avoid undefined
+                    const [datum, nazev, misto, popis] = parts;
+
                     if (filter && !misto.includes(filter)) return;
                     if (dateFilter && datum !== dateFilter) return;
                     if (typeFilter && !popis.toLowerCase().includes(typeFilter)) return;
@@ -116,7 +123,7 @@
                     eventCard.innerHTML = `
                         <h3 class="font-playfair text-2xl text-stone-800">${nazev} 🌎</h3>
                         <p class="text-stone-600">Místo: ${misto}</p>
-                        <p class="text-stone-600">Popis: ${popis}</p>
+                        <p class="text-stone-600">Popis: ${popis || 'N/A'}</p>
                         <button onclick="addToCalendar('${datum}', '${nazev}', '${misto}')" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-all transform hover:scale-105 mt-4">
                             Přidat do kalendáře 🔔
                         </button>
