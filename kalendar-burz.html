@@ -54,38 +54,47 @@
             border-radius: 50%;
             margin-right: 0.5rem;
         }
-        /* New promotional banner styles */
+        /* Updated promotional banner styles */
         .promo-banner {
             background-color: #f8f4e5;
             border-bottom: 2px solid #e2d5b7;
-            padding: 1rem;
+            padding: 1rem 2rem;
             position: sticky;
             top: 0;
             z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 1rem;
         }
         .promo-button {
             background-color: #8b4513;
             color: white;
             padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
+            border-radius: 1rem; /* Changed to more rounded */
             text-decoration: none;
             font-weight: bold;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.3s;
         }
         .promo-button:hover {
             background-color: #6b3410;
+            transform: scale(1.05);
+        }
+        /* Adjust container margins for banner */
+        body {
+            margin: 0;
+            padding: 0;
         }
     </style>
 </head>
 <body class="bg-stone-100 min-h-screen flex flex-col justify-between">
-    <!-- New promotional banner -->
+    <!-- Updated promotional banner with rounded corners -->
     <div class="promo-banner">
-        <span class="font-playfair">Objevte svět starožitností</span>
+        <span class="font-playfair text-lg md:text-xl">ANTIKTRH.CZ - Prodej starožitností snadno</span>
         <a href="https://antiktrh.cz" class="promo-button">
-            AntikTrh - Prodej starožitností snadno
+            PRODAT 💰
         </a>
     </div>
 
@@ -261,25 +270,43 @@
             renderEvents();
         });
 
-        function openCalendarWithEvent(date, title) {
-            // Zkopírovat událost do schránky
-            const eventText = `${title} - ${date}`;
-            navigator.clipboard.writeText(eventText)
-                .then(() => {
-                    alert('Událost zkopírována do schránky');
-                    
-                    // Detekce zařízení a otevření kalendáře
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                    const calendarUrl = isIOS ? 'calshow://' : 'content://com.android.calendar/time';
-                    
-                    // Otevřít kalendář
-                    setTimeout(() => {
-                        window.location.href = calendarUrl;
-                    }, 1000); // Krátké zpoždění pro zobrazení alertu
-                })
-                .catch(() => {
-                    alert('Nepodařilo se zkopírovat událost. ' + eventText);
-                });
+        function addToCalendar(date, title, place, description) {
+            const event = {
+                title: title,
+                description: description,
+                location: place,
+                start: new Date(date).toISOString(),
+                end: new Date(new Date(date).getTime() + 2 * 60 * 60 * 1000).toISOString() // Předpokládejme 2 hodiny trvání
+            };
+
+            // Vytvoření .ics souboru
+            const icsContent = `
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//AntikTrh//Bleší a Starožitné Trhy//CZ
+BEGIN:VEVENT
+UID:${new Date().getTime()}@antiktrh.cz
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTSTART:${event.start.replace(/[-:]/g, '').split('.')[0]}Z
+DTEND:${event.end.replace(/[-:]/g, '').split('.')[0]}Z
+SUMMARY:${event.title}
+DESCRIPTION:${event.description}
+LOCATION:${event.location}
+END:VEVENT
+END:VCALENDAR
+            `.trim();
+
+            const blob = new Blob([icsContent], { type: 'text/calendar' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${title}.ics`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            alert('Událost byla přidána do vašeho kalendáře.');
         }
     </script>
 </body>
