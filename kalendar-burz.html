@@ -229,50 +229,25 @@
             renderEvents();
         });
 
-function addToCalendar(date, title) {
-    // Convert date from DD.MM.YYYY to components
-    const [day, month, year] = date.split('.');
-    
-    // Detect mobile device
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-    const isAndroid = /android/i.test(userAgent);
-
-    if (isIOS) {
-        // Format for iOS calendar
-        const formattedDate = `${year}${month}${day}`;
-        const iosUrl = `calshow://${Date.parse(`${year}-${month}-${day}`)/1000}`;
-        window.location.href = iosUrl;
-    } else if (isAndroid) {
-        // Format for Android calendar
-        const formattedDate = `${year}-${month}-${day}`;
-        const androidUrl = `content://com.android.calendar/time/${new Date(formattedDate).getTime()}`;
-        window.location.href = androidUrl;
-    } else {
-        // Fallback for other devices
-        alert(`Událost k přidání do kalendáře:\n${title}\nDatum: ${date}`);
-    }
-
-    // Backup: Copy to clipboard
+function openCalendarWithEvent(date, title) {
+    // Zkopírovat událost do schránky
     const eventText = `${title} - ${date}`;
-    navigator.clipboard.writeText(eventText).catch(() => {
-        console.log('Clipboard copy failed');
-    });
-}
-
-// Funkce pro detekci mobilního zařízení
-function isMobileDevice() {
-    return (typeof window.orientation !== "undefined") 
-        || (navigator.userAgent.indexOf('IEMobile') !== -1);
-}
-
-// Přidání události onclick s kontrolou mobilního zařízení
-function handleCalendarClick(date, title) {
-    if (isMobileDevice()) {
-        addToCalendar(date, title);
-    } else {
-        alert('Tato funkce je dostupná pouze na mobilních zařízeních.');
-    }
+    navigator.clipboard.writeText(eventText)
+        .then(() => {
+            alert('Událost zkopírována do schránky');
+            
+            // Detekce zařízení a otevření kalendáře
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const calendarUrl = isIOS ? 'calshow://' : 'content://com.android.calendar/time';
+            
+            // Otevřít kalendář
+            setTimeout(() => {
+                window.location.href = calendarUrl;
+            }, 1000); // Krátké zpoždění pro zobrazení alertu
+        })
+        .catch(() => {
+            alert('Nepodařilo se zkopírovat událost. ' + eventText);
+        });
 }
     </script>
 </body>
