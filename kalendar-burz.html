@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bleší a Starožitné Trhy - Kalendář | AntikTrh</title>
+    <link rel="icon" href="https://i.postimg.cc/hGMQ4KYG/1.webp" type="image/x-icon">
+    <meta name="description" content="Kompletní kalendář bleších a starožitných trhů v České republice. Plánujte návštěvy trhů, přidávejte akce do svého kalendáře a objevte trhy ve vašem okolí díky snadným filtrům.">
+    <meta name="keywords" content="bleší trhy, starožitné trhy, kalendář trhů, AntikTrh, starožitnosti, bleší burza, kde najít trhy, trhy v Česku, burza starožitností">
+    <meta name="author" content="AntikTrh">
+    <meta property="og:title" content="Bleší a Starožitné Trhy - Kalendář | AntikTrh">
+    <meta property="og:description" content="Kalendář všech bleších a starožitných trhů v České republice. Plánujte svou návštěvu s pomocí naší interaktivní stránky.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://antiktrh.cz/kalendar-burz">
+    <meta property="og:image" content="https://i.postimg.cc/W4MM6mCd/Main.webp">
+    <meta property="og:locale" content="cs_CZ">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Bleší a Starožitné Trhy - Kalendář | AntikTrh">
+    <meta name="twitter:description" content="Kompletní kalendář bleších a starožitných trhů v Česku. Plánujte svou návštěvu snadno a rychle.">
+    <meta name="twitter:image" content="https://i.postimg.cc/W4MM6mCd/Main.webp">
+    <meta name="twitter:site" content="@AntikTrh">
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/heroicons@2.0.16/dist/heroicons.min.js"></script>
+    <style>
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+        .event-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .transition-transform {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .filter-container {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        #filter {
+            background-color: #f9fafb;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-stone-100 min-h-screen flex flex-col justify-between">
+    <div class="container mx-auto px-4 py-8 flex-grow">
+        <h1 class="text-4xl md:text-5xl font-playfair text-center mb-6 text-stone-800">Kalendář Bleších a Starožitných Trhů 🕰️</h1>
+        <div class="filter-container mb-6">
+            <label for="filter" class="block text-stone-800 text-lg mb-2">Filtrovat podle:</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <select id="filter" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500">
+                    <option value="">Všechny lokality</option>
+                    <option value="Plzeň">Plzeň</option>
+                    <option value="Praha">Praha</option>
+                    <option value="Ostrava">Ostrava</option>
+                    <option value="Buštěhrad">Buštěhrad</option>
+                    <option value="Most">Most</option>
+                    <option value="Olomouc">Olomouc</option>
+                    <option value="Brno">Brno</option>
+                    <option value="Hodonice">Hodonice</option>
+                    <option value="Chotusice">Chotusice</option>
+                    <!-- Další možnosti podle potřeby -->
+                </select>
+                <input type="date" id="filter-date" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500" placeholder="Filtrovat podle data">
+                <select id="filter-type" class="w-full p-3 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:border-amber-500 focus:ring-amber-500">
+                    <option value="">Všechny typy</option>
+                    <option value="bleší trh">Bleší trhy</option>
+                    <option value="starožitnosti">Starožitné trhy</option>
+                    <option value="auto-moto">Auto-moto trhy</option>
+                </select>
+            </div>
+        </div>
+        <div id="calendar" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Event cards will be generated here -->
+        </div>
+    </div>
+    <footer class="bg-stone-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h3 class="font-playfair text-xl mb-3">O projektu</h3>
+                <p class="text-stone-300">Tato stránka je věnovaná milovníkům starožitností a všem těm, kteří rádi navštěvují bleší trhy. Pomůžeme Vám plánovat svou návštěvu a nezmeškat žádný zajímavý trh!</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fleaMarkets = `
+                ${`file-EYrccYgVsf6tQqKygbx2AJpE`} // Contents from blesaky.txt
+            `;
+            const antiqueMarkets = `
+                ${`file-Yjtv6qO8RsW3x9MNFmiJhPcm`} // Contents from staro.txt
+            `;
+            const events = [...fleaMarkets.split('\n'), ...antiqueMarkets.split('\n')];
+            
+            const calendarElement = document.getElementById('calendar');
+            const filterElement = document.getElementById('filter');
+            const filterDateElement = document.getElementById('filter-date');
+            const filterTypeElement = document.getElementById('filter-type');
+
+            function renderEvents(filter = "", dateFilter = "", typeFilter = "") {
+                calendarElement.innerHTML = "";
+                events.forEach(event => {
+                    if (!event.trim()) return;
+
+                    const [datum, nazev, misto, popis] = event.split('\t');
+                    if (filter && !misto.includes(filter)) return;
+                    if (dateFilter && datum !== dateFilter) return;
+                    if (typeFilter && !popis.toLowerCase().includes(typeFilter)) return;
+
+                    const eventCard = document.createElement('div');
+                    eventCard.className = "event-card bg-white p-6 rounded-xl shadow-md transition-transform";
+                    eventCard.innerHTML = `
+                        <h3 class="font-playfair text-2xl text-stone-800">${nazev} 🌎</h3>
+                        <p class="text-stone-600">Místo: ${misto}</p>
+                        <p class="text-stone-600">Popis: ${popis}</p>
+                        <button onclick="addToCalendar('${datum}', '${nazev}', '${misto}')" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-all transform hover:scale-105 mt-4">
+                            Přidat do kalendáře 🔔
+                        </button>
+                    `;
+                    calendarElement.appendChild(eventCard);
+                });
+            }
+
+            filterElement.addEventListener('change', function () {
+                renderEvents(this.value, filterDateElement.value, filterTypeElement.value);
+            });
+
+            filterDateElement.addEventListener('change', function () {
+                renderEvents(filterElement.value, this.value, filterTypeElement.value);
+            });
+
+            filterTypeElement.addEventListener('change', function () {
+                renderEvents(filterElement.value, filterDateElement.value, this.value);
+            });
+
+            renderEvents();
+        });
+
+        function addToCalendar(date, title, location) {
+            // Function to add event to the user's calendar
+            const calEvent = {
+                title,
+                startDate: date,
+                endDate: date,
+                location,
+                notes: "Nezapomeňte na tento trh!"
+            };
+
+            if (window.AppleCal) {
+                window.AppleCal.addEvent(calEvent);
+            } else {
+                alert("Přidávání do kalendáře podporováno pouze na zařízeních iOS.");
+            }
+        }
+    </script>
+</body>
+</html>
