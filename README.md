@@ -1,6 +1,6 @@
-# ANTRH - Prodej starožitností snadno 🕰️
+# RTRV - Prodej starožitností snadno 🕰️
 
-ANTRH je moderní a uživatelsky přívětivá platforma určená pro rychlý a férový prodej starožitností a cenností. Naše webová aplikace nabízí profesionální ocenění, diskrétní služby a jednoduchý proces prodeje, který splní očekávání jak prodávajících, tak kupujících.
+RTRV je moderní a uživatelsky přívětivá platforma určená pro rychlý a férový prodej starožitností a cenností. Naše webová aplikace nabízí profesionální ocenění, diskrétní služby a jednoduchý proces prodeje, který splní očekávání jak prodávajících, tak kupujících.
 
 ## 🚀 Klíčové Funkce
 
