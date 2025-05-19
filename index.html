@@ -43,6 +43,10 @@
     
     <!-- EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js"></script>
+
+    <!-- Cloudinary, Compressor.js for image compression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cloudinary-core/2.13.0/cloudinary-core-shrinkwrap.min.js"></script>
+    <script src="https://unpkg.com/compressorjs/dist/compressor.min.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
@@ -199,6 +203,33 @@
                     <input type="number" id="fixedPriceAmount" name="fixedPriceAmount" placeholder="Např. 1000" min="0" class="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                 </div>
 
+<div class="mb-6">
+    <label for="photos" class="block text-sm font-medium text-stone-700 mb-2">Fotografie <span id="photo-counter" class="text-stone-500">0 / 10</span></label>
+    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-md hover:border-amber-500 hover:bg-amber-50 transition-all cursor-pointer">
+        <div class="space-y-1 text-center">
+            <svg class="mx-auto h-12 w-12 text-stone-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div class="flex justify-center text-sm text-stone-600">
+                <label for="photo-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-amber-600 hover:text-amber-500 focus-within:outline-none">
+                    <span>Vyberte fotografie</span>
+                    <input id="photo-upload" type="file" class="sr-only" accept="image/*" multiple>
+                </label>
+                <p class="pl-1">nebo přetáhněte sem</p>
+            </div>
+            <p class="text-xs text-stone-500">
+                PNG, JPG, GIF do 10 MB
+            </p>
+        </div>
+    </div>
+    <div id="photo-preview" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3"></div>
+    <div id="upload-progress" class="hidden mt-3">
+        <div class="w-full bg-stone-200 rounded-full h-2.5">
+            <div id="progress-bar" class="bg-amber-600 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <p id="progress-text" class="text-sm text-stone-600 mt-1">Nahrávání: 0%</p>
+    </div>
+</div>
                 <button type="submit" id="submitBtn" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-full transition-all transform hover:scale-105">
                     Odeslat
                 </button>
@@ -396,241 +427,421 @@
 </div>
     </footer>
     <script>
-        function showForm() {
-            document.getElementById('homePage').classList.add('hidden');
-            document.getElementById('formPage').classList.remove('hidden');
-        }
+// Funkce pro zobrazení formuláře
+function showForm() {
+    document.getElementById('homePage').classList.add('hidden');
+    document.getElementById('formPage').classList.remove('hidden');
+}
 
-        function showHome() {
-            document.getElementById('formPage').classList.add('hidden');
-            document.getElementById('homePage').classList.remove('hidden');
-        }
+// Funkce pro zobrazení úvodní stránky
+function showHome() {
+    document.getElementById('formPage').classList.add('hidden');
+    document.getElementById('homePage').classList.remove('hidden');
+}
 
-        // Funkce pro generování náhodného čísla výkupu
-        function generatePurchaseNumber() {
-            return Math.floor(100000 + Math.random() * 900000);
-        }
+// Funkce pro generování náhodného čísla výkupu
+function generatePurchaseNumber() {
+    return Math.floor(100000 + Math.random() * 900000);
+}
 
-        // Funkce pro otevření dialogu s možnostmi
-        function showPhotoOptions() {
-            document.getElementById('photoOptionsDialog').classList.remove('hidden');
-        }
+// Inicializace EmailJS
+(function(){
+    emailjs.init("OwmvA6xONh2s5ESbm");
+})();
 
-        // Funkce pro zavření dialogu
-        function closePhotoDialog() {
-            document.getElementById('photoOptionsDialog').classList.add('hidden');
-            showHome();
-        }
+// Nastavení pro Cloudinary
+const cloudName = 'drrzl7evt'; // Nahraďte svým Cloudinary cloud name
+const uploadPreset = 'retrovykup_preset'; // Nahraďte svým upload preset (nastavte jako unsigned)
 
-        // Funkce pro otevření e-mailového klienta
-function sendEmail() {
-    const purchaseNumber = generatePurchaseNumber();
-    const emailAddress = 'retrovykup@seznam.cz';
-    const subject = `Výkup číslo: ${purchaseNumber}`;
-    const body = `Dobrý den,\n\nposílám fotky k výkupu číslo ${purchaseNumber}.\n\n`;
+// Proměnné pro práci s formulářem
+const form = document.getElementById('antiqueForm');
+const submitBtn = document.getElementById('submitBtn');
+const loading = document.getElementById('loading');
+
+// Proměnné pro práci s fotografiemi
+let selectedFiles = [];
+const maxFiles = 10;
+let vykupId = null;
+const photoUpload = document.getElementById('photo-upload');
+const photoPreview = document.getElementById('photo-preview');
+const uploadProgress = document.getElementById('upload-progress');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+
+// Vygenerování ID výkupu při načtení stránky
+document.addEventListener('DOMContentLoaded', function() {
+    vykupId = generatePurchaseNumber();
     
-    try {
-        // Try modern approach first
-        window.open(`mailto:${emailAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-    } catch (e) {
-        // Fallback for browsers that block window.open
-        const mailtoLink = document.createElement('a');
-        mailtoLink.href = `mailto:${emailAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        mailtoLink.target = '_blank';
-        document.body.appendChild(mailtoLink);
-        mailtoLink.click();
-        document.body.removeChild(mailtoLink);
+    // Přidání klikatelnosti pro celé pole nahrávání
+    const uploadArea = document.querySelector('.border-dashed');
+    if (uploadArea) {
+        uploadArea.addEventListener('click', function(e) {
+            // Neaktivovat kliknutí, pokud uživatel klikl přímo na tlačítko nebo text uvnitř
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL' && !e.target.closest('label')) {
+                photoUpload.click();
+            }
+        });
+    }
+});
+
+// Posluchač událostí pro výběr souborů
+photoUpload.addEventListener('change', handleFileSelect);
+
+// Drag and drop funkce
+const dropZone = document.querySelector('.border-dashed');
+if (dropZone) {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    dropZone.addEventListener('drop', handleDrop, false);
+}
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function highlight() {
+    dropZone.classList.add('border-amber-500', 'bg-amber-50');
+    dropZone.style.cursor = 'pointer';
+}
+
+function unhighlight() {
+    dropZone.classList.remove('border-amber-500', 'bg-amber-50');
+}
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFiles(files);
+}
+
+// Zpracování vybraných souborů
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    if (selectedFiles.length + files.length > maxFiles) {
+        alert(`Můžete nahrát maximálně ${maxFiles} fotografií.`);
+        return;
+    }
+
+    Array.from(files).forEach(file => {
+        if (!file.type.match('image.*')) {
+            alert('Prosím vyberte pouze obrázky.');
+            return;
+        }
+
+        // Přidání souboru do pole
+        selectedFiles.push(file);
+        
+        // Vytvoření náhledu
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.className = 'relative';
+            
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'h-24 w-24 object-cover rounded-md';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '&times;';
+            removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center';
+            removeBtn.onclick = function() {
+                const index = selectedFiles.indexOf(file);
+                if (index !== -1) {
+                    selectedFiles.splice(index, 1);
+                }
+                div.remove();
+            };
+            
+            div.appendChild(img);
+            div.appendChild(removeBtn);
+            photoPreview.appendChild(div);
+        };
+        
+        reader.readAsDataURL(file);
+    });
+    
+    // Aktualizace informace o počtu vybraných souborů
+    updatePhotoCounter();
+}
+
+// Funkce pro aktualizaci počítadla fotek
+function updatePhotoCounter() {
+    const photoCounter = document.getElementById('photo-counter');
+    if (photoCounter) {
+        photoCounter.textContent = `${selectedFiles.length} / ${maxFiles}`;
+        
+        // Změna barvy podle počtu
+        if (selectedFiles.length >= maxFiles) {
+            photoCounter.classList.remove('text-amber-600');
+            photoCounter.classList.add('text-red-600');
+        } else if (selectedFiles.length > 0) {
+            photoCounter.classList.remove('text-red-600');
+            photoCounter.classList.add('text-amber-600');
+        } else {
+            photoCounter.classList.remove('text-amber-600', 'text-red-600');
+            photoCounter.classList.add('text-stone-500');
+        }
     }
 }
 
-        (function(){
-            emailjs.init("OwmvA6xONh2s5ESbm");
-        })();
-
-        const form = document.getElementById('antiqueForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const loading = document.getElementById('loading');
-
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            submitBtn.disabled = true;
-            loading.classList.remove('hidden');
-
-            try {
-                const formData = new FormData(form);
-                const emailUser = formData.get('emailUser') || 'Nezadáno';
-                let emailDomain = formData.get('emailDomain') || '@seznam.cz';
-                if (emailDomain === 'other') {
-                    emailDomain = formData.get('emailCustom') || 'Nezadáno';
-                }
-                const desiredPriceOption = formData.get('desiredPriceOption') || 'Nezadáno';
-                const fixedPriceAmount = formData.get('fixedPriceAmount') || 'Nezadáno';
-                const params = {
-                    name: formData.get('name') || 'Nezadáno',
-                    email: `${emailUser}${emailDomain}`,
-                    phone: formData.get('phone') || 'Nezadáno',
-                    location: formData.get('location') || 'Nezadáno',
-                    message: formData.get('message') || 'Nezadáno',
-                    desiredPriceOption: desiredPriceOption,
-                    fixedPriceAmount: fixedPriceAmount
-                };
-
-                // Odeslání emailu přes EmailJS
-                await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
-
-                alert('Formulář byl úspěšně odeslán! Nyní můžete nahrát fotografie.');
-                form.reset();
-                fixedPriceContainer.classList.add('hidden');
-                document.getElementById('fixedPriceAmount').removeAttribute('required');
-                
-                // Zobrazení dialogu pro výběr možnosti nahrání fotek
-                showPhotoOptions();
-            } catch (error) {
-                alert('Nastala chyba při odesílání formuláře: ' + error.message);
-                console.error(error);
-            } finally {
-                submitBtn.disabled = false;
-                loading.classList.add('hidden');
-            }
-        });
-
-        // Funkce pro debounce
-        function debounce(func, delay) {
-            let debounceTimer;
-            return function() {
-                const context = this;
-                const args = arguments;
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => func.apply(context, args), delay);
-            }
-        }
-
-        // Našeptávání adresy pomocí Nominatim
-        const locationInput = document.getElementById('location');
-        const suggestionsList = document.getElementById('suggestions');
-
-        locationInput.addEventListener('input', debounce(function() {
-            const query = this.value;
-            if (query.length < 3) {
-                suggestionsList.classList.add('hidden');
-                return;
-            }
-
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&countrycodes=cz,sk&q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    suggestionsList.innerHTML = '';
-                    data.forEach(item => {
-                        const option = document.createElement('li');
-                        option.textContent = item.display_name;
-                        option.className = 'p-2 hover:bg-gray-200 cursor-pointer';
-                        option.addEventListener('click', function() {
-                            locationInput.value = item.display_name;
-                            suggestionsList.classList.add('hidden');
-                        });
-                        suggestionsList.appendChild(option);
+// Komprese a nahrání obrázků na Cloudinary
+async function uploadImagesToCloudinary() {
+    if (selectedFiles.length === 0) return { urls: [], folderUrl: null };
+    
+    uploadProgress.classList.remove('hidden');
+    const uploadedUrls = [];
+    const currentDate = new Date().toISOString().slice(0, 10);
+    const folderPath = `retrovykup/vykup_${vykupId}_${currentDate}`;
+    
+    let completedUploads = 0;
+    
+    // Vytvoření promisů pro každý soubor
+    const uploadPromises = selectedFiles.map((file, index) => {
+        return new Promise((resolve, reject) => {
+            // Komprese obrázku před nahráním
+            new Compressor(file, {
+                quality: 0.6, // Nastavení kvality komprese (0.6 = 60%)
+                maxWidth: 1600,
+                maxHeight: 1600,
+                success(compressedFile) {
+                    const formData = new FormData();
+                    formData.append('file', compressedFile);
+                    formData.append('upload_preset', uploadPreset);
+                    formData.append('folder', folderPath);
+                    formData.append('public_id', `foto_${index + 1}`);
+                    
+                    fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        uploadedUrls.push(data.secure_url);
+                        completedUploads++;
+                        
+                        // Aktualizace progress baru
+                        const progressPercent = Math.round((completedUploads / selectedFiles.length) * 100);
+                        progressBar.style.width = `${progressPercent}%`;
+                        progressText.textContent = `Nahrávání: ${progressPercent}%`;
+                        
+                        resolve(data.secure_url);
+                    })
+                    .catch(error => {
+                        console.error('Upload failed:', error);
+                        reject(error);
                     });
-                    if (data.length > 0) {
-                        suggestionsList.classList.remove('hidden');
-                    } else {
-                        suggestionsList.classList.add('hidden');
-                    }
-                });
-        }, 300));
+                },
+                error(err) {
+                    console.error('Compression failed:', err);
+                    reject(err);
+                }
+            });
+        });
+    });
+    
+    try {
+        await Promise.all(uploadPromises);
+        return {
+            urls: uploadedUrls,
+            folderUrl: `https://console.cloudinary.com/console/c-${cloudName}/media_library/folders/${folderPath}`,
+            vykupId: vykupId
+        };
+    } catch (error) {
+        console.error('Error uploading images:', error);
+        alert('Nastala chyba při nahrávání fotografií.');
+        return { urls: [], folderUrl: null, vykupId: vykupId };
+    }
+}
 
-        // Skrytí našeptávače při kliknutí mimo
-        document.addEventListener('click', function(event) {
-            if (!locationInput.contains(event.target) && !suggestionsList.contains(event.target)) {
+// Odeslání formuláře
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    loading.classList.remove('hidden');
+
+    try {
+        // Nahrání fotografií na Cloudinary
+        const uploadResult = await uploadImagesToCloudinary();
+        
+        const formData = new FormData(form);
+        const emailUser = formData.get('emailUser') || 'Nezadáno';
+        let emailDomain = formData.get('emailDomain') || '@seznam.cz';
+        if (emailDomain === 'other') {
+            emailDomain = formData.get('emailCustom') || 'Nezadáno';
+        }
+        const desiredPriceOption = formData.get('desiredPriceOption') || 'Nezadáno';
+        const fixedPriceAmount = formData.get('fixedPriceAmount') || 'Nezadáno';
+        const params = {
+            name: formData.get('name') || 'Nezadáno',
+            email: `${emailUser}${emailDomain}`,
+            phone: formData.get('phone') || 'Nezadáno',
+            location: formData.get('location') || 'Nezadáno',
+            message: formData.get('message') || 'Nezadáno',
+            desiredPriceOption: desiredPriceOption,
+            fixedPriceAmount: fixedPriceAmount,
+            photos_count: selectedFiles.length,
+            cloudinary_folder: uploadResult.folderUrl || 'Bez fotografií',
+            vykup_id: uploadResult.vykupId || vykupId
+        };
+
+        // Odeslání emailu přes EmailJS
+        await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
+
+        alert('Formulář byl úspěšně odeslán včetně fotografií!');
+        form.reset();
+        fixedPriceContainer.classList.add('hidden');
+        document.getElementById('fixedPriceAmount').removeAttribute('required');
+        photoPreview.innerHTML = '';
+        selectedFiles = [];
+        uploadProgress.classList.add('hidden');
+        updatePhotoCounter();
+        
+        // Vygenerovat nové ID výkupu pro příští použití
+        vykupId = generatePurchaseNumber();
+        
+        showHome();
+    } catch (error) {
+        alert('Nastala chyba při odesílání formuláře: ' + error.message);
+        console.error(error);
+    } finally {
+        submitBtn.disabled = false;
+        loading.classList.add('hidden');
+    }
+});
+
+// Funkce pro debounce
+function debounce(func, delay) {
+    let debounceTimer;
+    return function() {
+        const context = this;
+        const args = arguments;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => func.apply(context, args), delay);
+    }
+}
+
+// Našeptávání adresy pomocí Nominatim
+const locationInput = document.getElementById('location');
+const suggestionsList = document.getElementById('suggestions');
+
+locationInput.addEventListener('input', debounce(function() {
+    const query = this.value;
+    if (query.length < 3) {
+        suggestionsList.classList.add('hidden');
+        return;
+    }
+
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&countrycodes=cz,sk&q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            suggestionsList.innerHTML = '';
+            data.forEach(item => {
+                const option = document.createElement('li');
+                option.textContent = item.display_name;
+                option.className = 'p-2 hover:bg-gray-200 cursor-pointer';
+                option.addEventListener('click', function() {
+                    locationInput.value = item.display_name;
+                    suggestionsList.classList.add('hidden');
+                });
+                suggestionsList.appendChild(option);
+            });
+            if (data.length > 0) {
+                suggestionsList.classList.remove('hidden');
+            } else {
                 suggestionsList.classList.add('hidden');
             }
         });
+}, 300));
 
-        // Zobrazení pole pro vlastní doménu e-mailu
-        const emailDomainSelect = document.getElementById('emailDomain');
-        const emailCustomInput = document.getElementById('emailCustom');
+// Skrytí našeptávače při kliknutí mimo
+document.addEventListener('click', function(event) {
+    if (!locationInput.contains(event.target) && !suggestionsList.contains(event.target)) {
+        suggestionsList.classList.add('hidden');
+    }
+});
 
-        emailDomainSelect.addEventListener('change', function() {
-            if (this.value === 'other') {
-                emailCustomInput.classList.remove('hidden');
-                emailCustomInput.setAttribute('required', 'required');
-            } else {
-                emailCustomInput.classList.add('hidden');
-                emailCustomInput.removeAttribute('required');
-                emailCustomInput.value = '';
-            }
-        });
+// Zobrazení pole pro vlastní doménu e-mailu
+const emailDomainSelect = document.getElementById('emailDomain');
+const emailCustomInput = document.getElementById('emailCustom');
 
-        // Formátování telefonního čísla
-        const phoneInput = document.getElementById('phone');
+emailDomainSelect.addEventListener('change', function() {
+    if (this.value === 'other') {
+        emailCustomInput.classList.remove('hidden');
+        emailCustomInput.setAttribute('required', 'required');
+    } else {
+        emailCustomInput.classList.add('hidden');
+        emailCustomInput.removeAttribute('required');
+        emailCustomInput.value = '';
+    }
+});
 
-        phoneInput.addEventListener('input', function(e) {
-            let value = this.value.replace(/\D/g, ''); // Odstranění všech nečíselných znaků
-            if (value.length > 9) value = value.slice(0, 9); // Omezení na 9 číslic
-            const formattedValue = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
-            this.value = formattedValue;
-        });
+// Formátování telefonního čísla
+const phoneInput = document.getElementById('phone');
 
-        // Dynamické zobrazování pole pro pevnou cenu
-        const desiredPriceOptions = document.getElementsByName('desiredPriceOption');
-        const fixedPriceContainer = document.getElementById('fixedPriceContainer');
+phoneInput.addEventListener('input', function(e) {
+    let value = this.value.replace(/\D/g, ''); // Odstranění všech nečíselných znaků
+    if (value.length > 9) value = value.slice(0, 9); // Omezení na 9 číslic
+    const formattedValue = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+    this.value = formattedValue;
+});
 
-        desiredPriceOptions.forEach(option => {
-            option.addEventListener('change', function() {
-                if (this.value === 'fixed') {
-                    fixedPriceContainer.classList.remove('hidden');
-                    document.getElementById('fixedPriceAmount').setAttribute('required', 'required');
-                } else {
-                    fixedPriceContainer.classList.add('hidden');
-                    document.getElementById('fixedPriceAmount').removeAttribute('required');
-                    document.getElementById('fixedPriceAmount').value = '';
-                }
-            });
-        });
+// Dynamické zobrazování pole pro pevnou cenu
+const desiredPriceOptions = document.getElementsByName('desiredPriceOption');
+const fixedPriceContainer = document.getElementById('fixedPriceContainer');
 
-        // FAQ - Rozbalování odpovědí
-        const faqQuestions = document.querySelectorAll('.faq-question');
-        faqQuestions.forEach(question => {
-            question.addEventListener('click', function() {
-                const answer = this.nextElementSibling;
-                if (answer.classList.contains('hidden')) {
-                    answer.classList.remove('hidden');
-                } else {
-                    answer.classList.add('hidden');
-                }
-            });
-        });
+desiredPriceOptions.forEach(option => {
+    option.addEventListener('change', function() {
+        if (this.value === 'fixed') {
+            fixedPriceContainer.classList.remove('hidden');
+            document.getElementById('fixedPriceAmount').setAttribute('required', 'required');
+        } else {
+            fixedPriceContainer.classList.add('hidden');
+            document.getElementById('fixedPriceAmount').removeAttribute('required');
+            document.getElementById('fixedPriceAmount').value = '';
+        }
+    });
+});
 
-        // Footer - Rozbalování obsahu
-        const footerToggle = document.querySelector('.footer-toggle');
-        const footerContent = document.querySelector('.footer-content');
+// FAQ - Rozbalování odpovědí
+const faqQuestions = document.querySelectorAll('.faq-question');
+faqQuestions.forEach(question => {
+    question.addEventListener('click', function() {
+        const answer = this.nextElementSibling;
+        if (answer.classList.contains('hidden')) {
+            answer.classList.remove('hidden');
+        } else {
+            answer.classList.add('hidden');
+        }
+    });
+});
 
-        footerToggle.addEventListener('click', function() {
-            if (footerContent.classList.contains('hidden')) {
-                footerContent.classList.remove('hidden');
-            } else {
-                footerContent.classList.add('hidden');
-            }
-        });
+// Footer - Rozbalování obsahu
+const footerToggle = document.querySelector('.footer-toggle');
+const footerContent = document.querySelector('.footer-content');
+
+footerToggle.addEventListener('click', function() {
+    if (footerContent.classList.contains('hidden')) {
+        footerContent.classList.remove('hidden');
+    } else {
+        footerContent.classList.add('hidden');
+    }
+});
     </script>
-              <div id="photoOptionsDialog" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white p-8 rounded-xl max-w-md w-full mx-4">
-        <h3 class="text-2xl font-playfair mb-6 text-stone-800">Jak chcete nahrát fotky?</h3>
-        
-        <div class="space-y-4">
-            <button onclick="sendEmail()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg transition-all">
-                Poslat e-mailem 📧
-            </button>
-            
-            <button onclick="window.open('https://www.uschovna.cz/poslat-zasilku', '_blank')" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg transition-all">
-                Nahrát přes Úschovnu 📁
-            </button>
-            
-            <button onclick="closePhotoDialog()" class="w-full border border-amber-600 text-amber-600 hover:bg-amber-50 font-bold py-3 px-4 rounded-lg transition-all">
-                Zavřít
-            </button>
-        </div>
-    </div>
-</div>
 </body>
 </html>
