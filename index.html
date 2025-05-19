@@ -181,7 +181,7 @@
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                 </svg>
             </span>
-            <p class="font-medium">Zaslat foto přes formulář, vyplněno za 1 minutu! ⏱️</p>
+            <a href="/formular" class="font-medium hover:underline">Vyplnění formuláře za 1minutu! ⏱️</a>
             <button id="closeAlertBtn" class="ml-6 hover:text-stone-200 focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -926,31 +926,6 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('alertBannerClosed', 'true');
     });
 });
-
-    // Funkce pro vytvoření banneru
-    function createSideBanner() {
-        // Vytvoření elementu
-        const banner = document.createElement('div');
-        banner.className = 'side-banner';
-        banner.textContent = 'VÝPRODEJ! -30% NA VŠE'; // Zde změňte text banneru podle potřeby
-        
-        // Přidání banneru do stránky
-        document.body.appendChild(banner);
-        
-        // Nastavení časovače pro skrytí banneru po 20 sekundách
-        setTimeout(() => {
-            banner.classList.add('banner-hide');
-            // Odstranění elementu po dokončení animace
-            setTimeout(() => {
-                banner.remove();
-            }, 500); // 500ms je doba trvání animace
-        }, 20000); // 20000ms = 20 sekund
-    }
-    
-    // Spuštění funkce po načtení stránky
-    document.addEventListener('DOMContentLoaded', function() {
-        createSideBanner();
-    });
     </script>
 </body>
 </html>
