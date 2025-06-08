@@ -1,5 +1,4 @@
 Datum,Název,Místo konání,Popis
-Datum,Název,Místo konání,Popis
 08.06.2025,Bleší trhy Plzeň,Plzeň,všeobecné (bleší trh)
 08.06.2025,Bleší trhy Praha,Praha 9,všeobecné (bleší trh)
 08.06.2025,Bleší a farmářské trhy,Málkov,všeobecné (bleší trh)
