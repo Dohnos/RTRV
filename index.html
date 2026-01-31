@@ -754,6 +754,7 @@ form.addEventListener('submit', async function(e) {
             desiredPriceOption: desiredPriceOption,
             fixedPriceAmount: fixedPriceAmount,
             photos_count: selectedFiles.length,
+            photos_urls: uploadResult.urls.join('\n'),
             cloudinary_folder: uploadResult.folderUrl || 'Bez fotografií',
             vykup_id: uploadResult.vykupId || vykupId
         };
