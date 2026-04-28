@@ -764,6 +764,7 @@ form.addEventListener('submit', async function(e) {
         const desiredPriceOption = formData.get('desiredPriceOption') || 'Nezadáno';
         const fixedPriceAmount = formData.get('fixedPriceAmount') || 'Nezadáno';
         const params = {
+            to_email: `${emailUser}${emailDomain}`,
             name: formData.get('name') || 'Nezadáno',
             email: `${emailUser}${emailDomain}`,
             phone: formData.get('phone') || 'Nezadáno',
