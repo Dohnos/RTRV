@@ -350,8 +350,11 @@ function buildLeadCard(lead) {
         ? `${lead.fixedPriceAmount || '?'} Kč`
         : 'Nabídněte';
 
+    const emailHref = lead.email ? `<a href="mailto:${escapeHtml(lead.email)}" onclick="event.stopPropagation()" class="hover:underline hover:text-amber-700">${escapeHtml(lead.email)}</a>` : '—';
+    const phoneHref = lead.phone ? `<a href="tel:${escapeHtml(lead.phone.replace(/\s+/g, ''))}" onclick="event.stopPropagation()" class="hover:underline hover:text-amber-700">${escapeHtml(lead.phone)}</a>` : '—';
+
     return `
-    <div class="bg-white rounded-xl shadow-md p-5" id="lead-${lead.id}">
+    <div class="bg-white rounded-xl shadow-md p-5 cursor-pointer hover:shadow-lg transition-shadow" id="lead-${lead.id}" onclick="openDetail('${lead.id}')">
         <!-- Záhlaví karty -->
         <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
@@ -363,8 +366,8 @@ function buildLeadCard(lead) {
 
         <!-- Info -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm text-stone-600 mb-4">
-            <div><span class="font-medium text-stone-700">📧</span> ${escapeHtml(lead.email || '—')}</div>
-            <div><span class="font-medium text-stone-700">📞</span> ${escapeHtml(lead.phone || '—')}</div>
+            <div><span class="font-medium text-stone-700">📧</span> ${emailHref}</div>
+            <div><span class="font-medium text-stone-700">📞</span> ${phoneHref}</div>
             <div><span class="font-medium text-stone-700">📍</span> ${escapeHtml(lead.location || '—')}</div>
             <div><span class="font-medium text-stone-700">📅</span> ${formatDate(lead.timestamp)}</div>
             <div><span class="font-medium text-stone-700">💰</span> ${escapeHtml(priceInfo)}</div>
@@ -375,7 +378,7 @@ function buildLeadCard(lead) {
         <p class="text-stone-600 text-sm italic bg-stone-50 rounded-lg px-4 py-3 mb-4">"${escapeHtml(shortMsg)}"</p>
 
         <!-- Akce -->
-        <div class="flex flex-wrap gap-2 items-center">
+        <div class="flex flex-wrap gap-2 items-center" onclick="event.stopPropagation()">
             <!-- Status dropdown -->
             <select onchange="changeStatus('${lead.id}', this.value)"
                 class="text-sm border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500 bg-white">

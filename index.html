@@ -778,8 +778,8 @@ form.addEventListener('submit', async function(e) {
             vykup_id: uploadResult.vykupId || vykupId
         };
 
-        // Odeslání emailu přes EmailJS
-        await emailjs.send("service_frm7yih", "template_ta8i0aq", params, "xjZWuwc3kvhF12tGX");
+        // Odeslání emailu přes EmailJS — deaktivováno, email se posílá ručně z admin panelu
+        // await emailjs.send("service_frm7yih", "template_ta8i0aq", params, "xjZWuwc3kvhF12tGX");
 
         // Uložení leadu do Firestore
         try {
