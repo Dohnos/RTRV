@@ -44,6 +44,10 @@
     <!-- EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js"></script>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <!-- Cloudinary, Compressor.js for image compression -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cloudinary-core/2.13.0/cloudinary-core-shrinkwrap.min.js"></script>
     <script src="https://unpkg.com/compressorjs/dist/compressor.min.js"></script>
@@ -507,6 +511,20 @@ function generatePurchaseNumber() {
     emailjs.init("OwmvA6xONh2s5ESbm");
 })();
 
+// Firebase konfigurace
+const firebaseConfig = {
+    apiKey: "VASE_API_KEY",                    // TODO: Vyplňte z Firebase konzole
+    authDomain: "VAS_PROJECT.firebaseapp.com", // TODO: Vyplňte z Firebase konzole
+    projectId: "VAS_PROJECT_ID",               // TODO: Vyplňte z Firebase konzole
+    storageBucket: "VAS_PROJECT.appspot.com",  // TODO: Vyplňte z Firebase konzole
+    messagingSenderId: "VAS_SENDER_ID",        // TODO: Vyplňte z Firebase konzole
+    appId: "VAS_APP_ID"                        // TODO: Vyplňte z Firebase konzole
+};
+
+// Inicializace Firebase a Firestore
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // Nastavení pro Cloudinary
 const cloudName = 'drrzl7evt'; // Nahraďte svým Cloudinary cloud name
 const uploadPreset = 'retrovykup_preset'; // Nahraďte svým upload preset (nastavte jako unsigned)
@@ -761,6 +779,27 @@ form.addEventListener('submit', async function(e) {
 
         // Odeslání emailu přes EmailJS
         await emailjs.send("service_yx70mqc", "template_7bb0vf6", params, "OwmvA6xONh2s5ESbm");
+
+        // Uložení leadu do Firestore
+        try {
+            await db.collection('leads').add({
+                name: params.name,
+                email: params.email,
+                phone: params.phone,
+                location: params.location,
+                message: params.message,
+                desiredPriceOption: params.desiredPriceOption,
+                fixedPriceAmount: params.fixedPriceAmount,
+                photos_count: params.photos_count,
+                photos_urls: uploadResult.urls,
+                cloudinary_folder: params.cloudinary_folder,
+                vykup_id: params.vykup_id,
+                status: 'nova',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (firestoreError) {
+            console.error('Chyba při ukládání do Firestore:', firestoreError);
+        }
 
         alert('Formulář byl úspěšně odeslán včetně fotografií!');
         form.reset();
