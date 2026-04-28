@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retrovykup Admin</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="https://i.postimg.cc/hGMQ4KYG/1.webp" type="image/x-icon">
+
+    <!-- Robots: neindexovat admin stránku -->
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        .font-playfair { font-family: 'Playfair Display', serif; }
+
+        /* Status badge colors */
+        .badge-nova      { background-color: #fef3c7; color: #92400e; }
+        .badge-probiha   { background-color: #dbeafe; color: #1e40af; }
+        .badge-vyrizeno  { background-color: #d1fae5; color: #065f46; }
+        .badge-nezajem   { background-color: #fee2e2; color: #991b1b; }
+        .badge-ceka      { background-color: #ede9fe; color: #5b21b6; }
+        .badge-domluveno { background-color: #ccfbf1; color: #134e4a; }
+
+        /* Modal backdrop */
+        #detailModal { backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body class="bg-stone-100 min-h-screen font-sans">
+
+<!-- ========================================================
+     PŘIHLAŠOVACÍ SEKCE
+     ======================================================== -->
+<div id="loginSection" class="min-h-screen flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <h1 class="text-3xl font-playfair text-center text-stone-800 mb-2">Retrovykup Admin</h1>
+        <p class="text-center text-stone-500 mb-8">Přihlaste se pro přístup k dashboardu</p>
+
+        <form id="loginForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1">E-mail</label>
+                <input type="email" id="loginEmail" required
+                    class="w-full rounded-lg border border-stone-300 px-4 py-2.5 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="admin@retrovykup.cz">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1">Heslo</label>
+                <input type="password" id="loginPassword" required
+                    class="w-full rounded-lg border border-stone-300 px-4 py-2.5 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="••••••••">
+            </div>
+
+            <div id="loginError" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3"></div>
+
+            <button type="submit"
+                class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-full transition-all transform hover:scale-105">
+                Přihlásit se
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================
+     DASHBOARD SEKCE (skrytá před přihlášením)
+     ======================================================== -->
+<div id="dashboardSection" class="hidden">
+
+    <!-- Navbar -->
+    <nav class="bg-stone-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 class="text-xl font-playfair">🕰️ Retrovykup Admin</h1>
+            <div class="flex items-center gap-4">
+                <span id="adminEmail" class="text-stone-300 text-sm hidden sm:inline"></span>
+                <button id="logoutBtn"
+                    class="bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded-lg text-sm transition-all">
+                    Odhlásit
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- Statistiky -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-5 text-center">
+                <p class="text-3xl font-bold text-stone-800" id="statTotal">0</p>
+                <p class="text-stone-500 text-sm mt-1">Celkem leads</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-5 text-center">
+                <p class="text-3xl font-bold text-amber-600" id="statNova">0</p>
+                <p class="text-stone-500 text-sm mt-1">Nová poptávka</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-5 text-center">
+                <p class="text-3xl font-bold text-blue-600" id="statProbiha">0</p>
+                <p class="text-stone-500 text-sm mt-1">Probíhá</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-5 text-center">
+                <p class="text-3xl font-bold text-green-600" id="statVyrizeno">0</p>
+                <p class="text-stone-500 text-sm mt-1">Vyřízeno</p>
+            </div>
+        </div>
+
+        <!-- Filtry -->
+        <div class="flex flex-wrap gap-2 mb-6" id="filterButtons">
+            <button class="filter-btn active-filter px-4 py-2 rounded-full text-sm font-medium transition-all" data-filter="all">Vše</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all" data-filter="nova">🆕 Nová poptávka</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all" data-filter="probiha">🔄 Probíhá</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all" data-filter="vyrizeno">✅ Vyřízeno</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all" data-filter="nezajem">❌ Nemám zájem</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all" data-filter="ceka">⏳ Čeká</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all" data-filter="domluveno">🤝 Domluveno</button>
+        </div>
+
+        <!-- Seznam leadů -->
+        <div id="leadsList" class="space-y-4">
+            <div class="text-center text-stone-400 py-12" id="leadsLoading">
+                Načítám leads...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================
+     MODÁLNÍ OKNO — DETAIL LEADU
+     ======================================================== -->
+<div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-start justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-8 relative">
+        <!-- Záhlaví modálu -->
+        <div class="bg-stone-800 text-white rounded-t-2xl px-6 py-4 flex items-center justify-between">
+            <h2 class="font-playfair text-xl" id="modalTitle">Detail leadu</h2>
+            <button id="closeModal" class="text-stone-300 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+
+        <div class="p-6 space-y-6" id="modalContent">
+            <!-- Dynamicky generovaný obsah -->
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================
+     STYLY PRO FILTRY
+     ======================================================== -->
+<style>
+    .filter-btn {
+        background-color: #e7e5e4;
+        color: #44403c;
+    }
+    .filter-btn:hover {
+        background-color: #d6d3d1;
+    }
+    .active-filter {
+        background-color: #d97706;
+        color: #ffffff;
+    }
+</style>
+
+<script>
+// ============================================================
+// KONFIGURACE
+// ============================================================
+
+const firebaseConfig = {
+    apiKey: "VASE_API_KEY",                    // TODO: Vyplňte z Firebase konzole
+    authDomain: "VAS_PROJECT.firebaseapp.com", // TODO: Vyplňte z Firebase konzole
+    projectId: "VAS_PROJECT_ID",               // TODO: Vyplňte z Firebase konzole
+    storageBucket: "VAS_PROJECT.appspot.com",  // TODO: Vyplňte z Firebase konzole
+    messagingSenderId: "VAS_SENDER_ID",        // TODO: Vyplňte z Firebase konzole
+    appId: "VAS_APP_ID"                        // TODO: Vyplňte z Firebase konzole
+};
+
+const EMAILJS_PUBLIC_KEY     = "OwmvA6xONh2s5ESbm";
+const EMAILJS_SERVICE_ID     = "service_yx70mqc";
+const EMAILJS_TEMPLATE_ZAJEM   = "template_zajem";   // TODO: Vytvořit šablonu v EmailJS
+const EMAILJS_TEMPLATE_NEZAJEM = "template_nezajem"; // TODO: Vytvořit šablonu v EmailJS
+
+// ============================================================
+// INICIALIZACE
+// ============================================================
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// ============================================================
+// STAV
+// ============================================================
+
+let allLeads      = [];
+let currentFilter = 'all';
+let unsubscribeLeads = null;
+
+// ============================================================
+// STATUS — HELPER FUNKCE
+// ============================================================
+
+const STATUS_LABELS = {
+    nova:      '🆕 Nová poptávka',
+    probiha:   '🔄 Probíhá',
+    vyrizeno:  '✅ Vyřízeno',
+    nezajem:   '❌ Nemám zájem',
+    ceka:      '⏳ Čeká na odpověď',
+    domluveno: '🤝 Domluveno'
+};
+
+function statusBadgeClass(status) {
+    const map = {
+        nova:      'badge-nova',
+        probiha:   'badge-probiha',
+        vyrizeno:  'badge-vyrizeno',
+        nezajem:   'badge-nezajem',
+        ceka:      'badge-ceka',
+        domluveno: 'badge-domluveno'
+    };
+    return map[status] || 'bg-stone-200 text-stone-700';
+}
+
+function formatDate(timestamp) {
+    if (!timestamp) return '—';
+    const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return d.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+// ============================================================
+// AUTENTIZACE
+// ============================================================
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorEl  = document.getElementById('loginError');
+    errorEl.classList.add('hidden');
+
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch (err) {
+        errorEl.textContent = 'Chybné přihlašovací údaje: ' + err.message;
+        errorEl.classList.remove('hidden');
+    }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function() {
+    auth.signOut();
+});
+
+auth.onAuthStateChanged(function(user) {
+    if (user) {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
+        document.getElementById('adminEmail').textContent = user.email;
+        startLeadsListener();
+    } else {
+        document.getElementById('dashboardSection').classList.add('hidden');
+        document.getElementById('loginSection').classList.remove('hidden');
+        if (unsubscribeLeads) {
+            unsubscribeLeads();
+            unsubscribeLeads = null;
+        }
+        allLeads = [];
+    }
+});
+
+// ============================================================
+// REALTIME LISTENER NA LEADS
+// ============================================================
+
+function startLeadsListener() {
+    if (unsubscribeLeads) unsubscribeLeads();
+
+    unsubscribeLeads = db.collection('leads')
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(function(snapshot) {
+            allLeads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateStats();
+            renderLeads();
+        }, function(err) {
+            console.error('Chyba při načítání leads:', err);
+        });
+}
+
+// ============================================================
+// STATISTIKY
+// ============================================================
+
+function updateStats() {
+    document.getElementById('statTotal').textContent    = allLeads.length;
+    document.getElementById('statNova').textContent     = allLeads.filter(l => l.status === 'nova').length;
+    document.getElementById('statProbiha').textContent  = allLeads.filter(l => l.status === 'probiha').length;
+    document.getElementById('statVyrizeno').textContent = allLeads.filter(l => l.status === 'vyrizeno').length;
+}
+
+// ============================================================
+// FILTRY
+// ============================================================
+
+document.getElementById('filterButtons').addEventListener('click', function(e) {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active-filter'));
+    btn.classList.add('active-filter');
+    currentFilter = btn.dataset.filter;
+    renderLeads();
+});
+
+// ============================================================
+// RENDER LEADS
+// ============================================================
+
+function renderLeads() {
+    const list = document.getElementById('leadsList');
+    const filtered = currentFilter === 'all'
+        ? allLeads
+        : allLeads.filter(l => l.status === currentFilter);
+
+    document.getElementById('leadsLoading').classList.add('hidden');
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="text-center text-stone-400 py-12">Žádné leads v této kategorii.</div>';
+        return;
+    }
+
+    list.innerHTML = filtered.map(lead => buildLeadCard(lead)).join('');
+}
+
+function buildLeadCard(lead) {
+    const badgeClass = statusBadgeClass(lead.status || 'nova');
+    const statusLabel = STATUS_LABELS[lead.status] || lead.status || 'Neznámý';
+    const shortMsg = (lead.message || '').length > 120
+        ? (lead.message || '').substring(0, 120) + '…'
+        : (lead.message || '—');
+    const priceInfo = lead.desiredPriceOption === 'fixed'
+        ? `${lead.fixedPriceAmount || '?'} Kč`
+        : 'Nabídněte';
+
+    return `
+    <div class="bg-white rounded-xl shadow-md p-5" id="lead-${lead.id}">
+        <!-- Záhlaví karty -->
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+            <div>
+                <h3 class="font-playfair text-lg text-stone-800">${escapeHtml(lead.name || '—')}</h3>
+                <p class="text-stone-400 text-xs mt-0.5">ID výkupu: #${escapeHtml(String(lead.vykup_id || '—'))}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}">${statusLabel}</span>
+        </div>
+
+        <!-- Info -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm text-stone-600 mb-4">
+            <div><span class="font-medium text-stone-700">📧</span> ${escapeHtml(lead.email || '—')}</div>
+            <div><span class="font-medium text-stone-700">📞</span> ${escapeHtml(lead.phone || '—')}</div>
+            <div><span class="font-medium text-stone-700">📍</span> ${escapeHtml(lead.location || '—')}</div>
+            <div><span class="font-medium text-stone-700">📅</span> ${formatDate(lead.timestamp)}</div>
+            <div><span class="font-medium text-stone-700">💰</span> ${escapeHtml(priceInfo)}</div>
+            <div><span class="font-medium text-stone-700">🖼️</span> ${lead.photos_count || 0} fotek</div>
+        </div>
+
+        <!-- Zpráva -->
+        <p class="text-stone-600 text-sm italic bg-stone-50 rounded-lg px-4 py-3 mb-4">"${escapeHtml(shortMsg)}"</p>
+
+        <!-- Akce -->
+        <div class="flex flex-wrap gap-2 items-center">
+            <!-- Status dropdown -->
+            <select onchange="changeStatus('${lead.id}', this.value)"
+                class="text-sm border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500 bg-white">
+                ${Object.entries(STATUS_LABELS).map(([val, label]) =>
+                    `<option value="${val}" ${lead.status === val ? 'selected' : ''}>${label}</option>`
+                ).join('')}
+            </select>
+
+            <!-- Mám zájem -->
+            <button onclick="sendZajem('${lead.id}')"
+                class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-lg transition-all">
+                ✅ Mám zájem
+            </button>
+
+            <!-- Nemám zájem -->
+            <button onclick="sendNezajem('${lead.id}')"
+                class="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg transition-all">
+                ❌ Nemám zájem
+            </button>
+
+            <!-- Detail -->
+            <button onclick="openDetail('${lead.id}')"
+                class="bg-stone-700 hover:bg-stone-800 text-white text-sm px-4 py-2 rounded-lg transition-all">
+                🔍 Zobrazit
+            </button>
+
+            <!-- Smazat -->
+            <button onclick="deleteLead('${lead.id}')"
+                class="bg-stone-200 hover:bg-red-100 text-stone-700 hover:text-red-700 text-sm px-4 py-2 rounded-lg transition-all">
+                🗑️ Smazat
+            </button>
+        </div>
+    </div>`;
+}
+
+// ============================================================
+// AKCE NA LEADECH
+// ============================================================
+
+async function changeStatus(id, status) {
+    try {
+        await db.collection('leads').doc(id).update({ status });
+    } catch (err) {
+        alert('Chyba při změně statusu: ' + err.message);
+    }
+}
+
+async function sendZajem(id) {
+    const lead = allLeads.find(l => l.id === id);
+    if (!lead) return;
+
+    if (!confirm(`Opravdu chcete zákazníkovi ${lead.name} odeslat zprávu "Mám zájem"?`)) return;
+
+    try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ZAJEM, {
+            to_email:  lead.email,
+            to_name:   lead.name,
+            vykup_id:  lead.vykup_id,
+            location:  lead.location,
+            phone:     lead.phone,
+            message:   lead.message
+        });
+        await db.collection('leads').doc(id).update({ status: 'probiha' });
+        alert('E-mail odeslán a status změněn na "Probíhá".');
+    } catch (err) {
+        alert('Chyba při odesílání e-mailu: ' + err.message);
+    }
+}
+
+async function sendNezajem(id) {
+    const lead = allLeads.find(l => l.id === id);
+    if (!lead) return;
+
+    if (!confirm(`Opravdu chcete zákazníkovi ${lead.name} odeslat zprávu "Nemám zájem"?`)) return;
+
+    try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_NEZAJEM, {
+            to_email:  lead.email,
+            to_name:   lead.name,
+            vykup_id:  lead.vykup_id,
+            message:   lead.message
+        });
+        await db.collection('leads').doc(id).update({ status: 'nezajem' });
+        alert('E-mail odeslán a status změněn na "Nemám zájem".');
+    } catch (err) {
+        alert('Chyba při odesílání e-mailu: ' + err.message);
+    }
+}
+
+async function deleteLead(id) {
+    const lead = allLeads.find(l => l.id === id);
+    if (!lead) return;
+
+    if (!confirm(`Opravdu chcete smazat lead od zákazníka "${lead.name}"? Tato akce je nevratná.`)) return;
+
+    try {
+        await db.collection('leads').doc(id).delete();
+    } catch (err) {
+        alert('Chyba při mazání leadu: ' + err.message);
+    }
+}
+
+// ============================================================
+// DETAIL MODAL
+// ============================================================
+
+function openDetail(id) {
+    const lead = allLeads.find(l => l.id === id);
+    if (!lead) return;
+
+    document.getElementById('modalTitle').textContent =
+        `Detail — ${lead.name || '—'} (#${lead.vykup_id || '—'})`;
+
+    const priceInfo = lead.desiredPriceOption === 'fixed'
+        ? `${lead.fixedPriceAmount || '?'} Kč (pevná cena)`
+        : 'Nabídněte';
+
+    const photoUrls = Array.isArray(lead.photos_urls)
+        ? lead.photos_urls
+        : (lead.photos_urls ? String(lead.photos_urls).split('\n').filter(Boolean) : []);
+
+    const photosHtml = photoUrls.length > 0
+        ? `<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            ${photoUrls.map(url => `
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+                    <img src="${escapeHtml(url)}" alt="Fotografie"
+                        class="h-24 w-full object-cover rounded-lg hover:opacity-80 transition-all">
+                </a>`).join('')}
+           </div>`
+        : '<p class="text-stone-400 text-sm">Bez fotografií</p>';
+
+    const cloudinaryLink = lead.cloudinary_folder && lead.cloudinary_folder !== 'Bez fotografií'
+        ? `<a href="${escapeHtml(lead.cloudinary_folder)}" target="_blank" rel="noopener noreferrer"
+              class="text-amber-600 hover:underline text-sm">Otevřít složku v Cloudinary →</a>`
+        : '<span class="text-stone-400 text-sm">Bez fotografií</span>';
+
+    document.getElementById('modalContent').innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div class="space-y-2">
+                <p><span class="font-medium text-stone-700">Jméno:</span> ${escapeHtml(lead.name || '—')}</p>
+                <p><span class="font-medium text-stone-700">E-mail:</span> ${escapeHtml(lead.email || '—')}</p>
+                <p><span class="font-medium text-stone-700">Telefon:</span> ${escapeHtml(lead.phone || '—')}</p>
+                <p><span class="font-medium text-stone-700">Lokalita:</span> ${escapeHtml(lead.location || '—')}</p>
+            </div>
+            <div class="space-y-2">
+                <p><span class="font-medium text-stone-700">ID výkupu:</span> #${escapeHtml(String(lead.vykup_id || '—'))}</p>
+                <p><span class="font-medium text-stone-700">Datum:</span> ${formatDate(lead.timestamp)}</p>
+                <p><span class="font-medium text-stone-700">Požadovaná cena:</span> ${escapeHtml(priceInfo)}</p>
+                <p><span class="font-medium text-stone-700">Počet fotek:</span> ${lead.photos_count || 0}</p>
+                <p><span class="font-medium text-stone-700">Status:</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${statusBadgeClass(lead.status)}">
+                        ${STATUS_LABELS[lead.status] || lead.status || '—'}
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <div>
+            <p class="font-medium text-stone-700 mb-2">Zpráva:</p>
+            <div class="bg-stone-50 rounded-lg px-4 py-3 text-stone-600 text-sm whitespace-pre-wrap">${escapeHtml(lead.message || '—')}</div>
+        </div>
+
+        <div>
+            <p class="font-medium text-stone-700 mb-3">Fotografie (${photoUrls.length}):</p>
+            ${photosHtml}
+            <div class="mt-3">${cloudinaryLink}</div>
+        </div>
+    `;
+
+    document.getElementById('detailModal').classList.remove('hidden');
+}
+
+function closeDetailModal() {
+    document.getElementById('detailModal').classList.add('hidden');
+}
+
+document.getElementById('closeModal').addEventListener('click', closeDetailModal);
+
+document.getElementById('detailModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDetailModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDetailModal();
+});
+
+// ============================================================
+// HELPER — XSS ochrana
+// ============================================================
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+</script>
+
+<!--
+=============================================================
+FIRESTORE SECURITY RULES (zkopírujte do Firebase konzole)
+=============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /leads/{leadId} {
+      allow create: if true;                        // veřejné formuláře mohou zapisovat
+      allow read, update, delete: if request.auth != null;  // jen přihlášený admin
+    }
+  }
+}
+
+=============================================================
+-->
+</body>
+</html>
