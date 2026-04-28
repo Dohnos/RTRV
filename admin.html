@@ -330,7 +330,7 @@ function renderLeads() {
         ? allLeads
         : allLeads.filter(l => l.status === currentFilter);
 
-    document.getElementById('leadsLoading').classList.add('hidden');
+    document.getElementById('leadsLoading')?.classList.add('hidden');
 
     if (filtered.length === 0) {
         list.innerHTML = '<div class="text-center text-stone-400 py-12">Žádné leads v této kategorii.</div>';
