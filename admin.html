@@ -481,6 +481,25 @@ async function deleteLead(id) {
     }
 }
 
+async function updateEmail(id) {
+    const newEmail = document.getElementById('editEmailInput').value.trim();
+    
+    if (!newEmail) {
+        alert('E-mail nemůže být prázdný.');
+        return;
+    }
+
+    try {
+        await db.collection('leads').doc(id).update({ email: newEmail });
+        alert('E-mail byl úspěšně upraven.');
+        
+        // Změna se díky onSnapshot automaticky propíše do seznamu na pozadí,
+        // modal můžeme buď zavřít, nebo nechat otevřený.
+    } catch (err) {
+        alert('Chyba při úpravě e-mailu: ' + err.message);
+    }
+}
+
 // ============================================================
 // DETAIL MODAL
 // ============================================================
@@ -519,7 +538,15 @@ function openDetail(id) {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div class="space-y-2">
                 <p><span class="font-medium text-stone-700">Jméno:</span> ${escapeHtml(lead.name || '—')}</p>
-                <p><span class="font-medium text-stone-700">E-mail:</span> ${escapeHtml(lead.email || '—')}</p>
+                <div class="flex items-center gap-2 my-1">
+    <span class="font-medium text-stone-700">E-mail:</span>
+    <input type="email" id="editEmailInput" value="${escapeHtml(lead.email || '')}" 
+        class="border border-stone-300 rounded-md px-2 py-1 text-sm w-full focus:outline-none focus:border-amber-500">
+    <button onclick="updateEmail('${lead.id}')" 
+        class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded-md text-xs font-semibold transition-all">
+        Uložit
+    </button>
+</div>
                 <p><span class="font-medium text-stone-700">Telefon:</span> ${escapeHtml(lead.phone || '—')}</p>
                 <p><span class="font-medium text-stone-700">Lokalita:</span> ${escapeHtml(lead.location || '—')}</p>
             </div>
