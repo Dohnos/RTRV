@@ -83,7 +83,11 @@
     <nav class="bg-stone-800 text-white shadow-lg">
         <div class="container mx-auto px-4 py-4 flex items-center justify-between">
             <h1 class="text-xl font-playfair">🕰️ Retrovykup Admin</h1>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+                <a href="/admin/mapa/"
+                    class="bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded-lg text-sm transition-all">
+                    🗺️ Mapa
+                </a>
                 <span id="adminEmail" class="text-stone-300 text-sm hidden sm:inline"></span>
                 <button id="logoutBtn"
                     class="bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded-lg text-sm transition-all">
@@ -208,6 +212,14 @@ emailjs.init(EMAILJS_PUBLIC_KEY);
 let allLeads      = [];
 let currentFilter = 'all';
 let unsubscribeLeads = null;
+
+// Otevření detailu přes odkaz typu /admin.html#lead-<id> (např. z mapy)
+let pendingDetailId = leadIdFromHash();
+
+function leadIdFromHash() {
+    const match = location.hash.match(/^#lead-(.+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
 
 // ============================================================
 // STATUS — HELPER FUNKCE
@@ -346,6 +358,13 @@ function startLeadsListener() {
             allLeads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             updateStats();
             renderLeads();
+
+            // Leady jsou načtené — teprve teď lze otevřít detail z odkazu
+            if (pendingDetailId) {
+                const id = pendingDetailId;
+                pendingDetailId = null;
+                openDetail(id);
+            }
         }, function(err) {
             console.error('Chyba při načítání leads:', err);
         });
@@ -652,6 +671,13 @@ function closeDetailModal() {
 }
 
 document.getElementById('closeModal').addEventListener('click', closeDetailModal);
+
+window.addEventListener('hashchange', function() {
+    const id = leadIdFromHash();
+    if (!id) return;
+    if (allLeads.length === 0) pendingDetailId = id;
+    else openDetail(id);
+});
 
 document.getElementById('detailModal').addEventListener('click', function(e) {
     if (e.target === this) closeDetailModal();
